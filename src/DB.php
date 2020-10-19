@@ -257,7 +257,7 @@ class DB {
 		if (!is_array($bindParams)) {
 			return;
 		}
-		$stmtParams = array();
+		$stmtParams = array('');
 
 		foreach ($bindParams as $prop => $val) {
 			$stmtParams[0] .= $this->determineType($val);
