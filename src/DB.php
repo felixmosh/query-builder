@@ -1,4 +1,5 @@
 <?php
+
 namespace QueryBuilder;
 
 use Closure;
@@ -44,15 +45,12 @@ class DB {
 	/** The number of executed queries.
 	 */
 	private $nbQueries;
-	/**
-	 * @var mixed|string
-	 */
-	private $logPath;
+	private $logger;
 
-	public function __construct($connection_str,$log_path = '') {
+	public function __construct($connection_str, $logger = null) {
 		$this->isDevelopment = $_ENV['APP_ENV'] === 'development';
 		$this->nbQueries = 0;
-		$this->logPath = $log_path;
+		$this->logger = $logger;
 
 		if (!isset($connection_str)) {
 			die('There was a problem connecting to the database - no db connection info.');
@@ -433,8 +431,8 @@ margin-top: 1.5rem;
 	 * @param $query
 	 */
 	protected function logError($query) {
-		if(!$this->logPath ){
-			return ;
+		if (!$this->logger) {
+			return;
 		}
 
 		$stack_trace = debug_backtrace();
@@ -455,11 +453,7 @@ margin-top: 1.5rem;
 			'ip' => $_SERVER['REMOTE_ADDR'],
 		);
 
-		if (!file_exists($this->logPath)) {
-			$file_handler = fopen($this->logPath, 'w');
-			fclose($file_handler);
-		}
-		error_log(json_encode($err, JSON_PRETTY_PRINT), 3, $this->logPath);
+		$this->logger->error(json_encode($err));
 	}
 
 	private function handleResults($queryBuilder, $postProcess = null) {
