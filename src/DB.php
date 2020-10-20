@@ -6,7 +6,9 @@ use Closure;
 use Exception;
 use mysqli;
 use QueryBuilder\QueryBuilder\Delete;
+use QueryBuilder\QueryBuilder\Func;
 use QueryBuilder\QueryBuilder\Insert;
+use QueryBuilder\QueryBuilder\Raw;
 use QueryBuilder\QueryBuilder\Select;
 use QueryBuilder\QueryBuilder\Update;
 
@@ -196,6 +198,23 @@ class DB {
 		$queryBuilder = new Delete($tableName);
 		$queryBuilder->setCallback($this->handleResults($queryBuilder));
 		return $queryBuilder;
+	}
+
+	/**
+	 * @param $str string
+	 * @param $params array
+	 * @return Raw
+	 */
+	public function raw($str, $params = array()) {
+		return new Raw($str, $params);
+	}
+
+	public function date($column) {
+		return new Func('Date', $column);
+	}
+
+	public function count($column) {
+		return new Func('Count', $column);
 	}
 
 	/** Get how many time the script took from the begin of this object.
