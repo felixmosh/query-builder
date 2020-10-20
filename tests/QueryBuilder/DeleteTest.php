@@ -61,7 +61,7 @@ final class DeleteTest extends TestCase {
 			->limit(1, 2)
 			->build();
 
-		$this->assertEquals("Delete From `$table` as `alias` Where `foo` = ? Order By `bla` asc Limit 1, 2", $sql);
+		$this->assertEquals("Delete From `$table` as `alias` Where `foo` = ? Order By `bla` asc Limit 2, 1", $sql);
 		$this->assertEquals(array('someValue'), $params);
 	}
 

@@ -158,7 +158,7 @@ final class SelectTest extends TestCase {
 
 		$select = new Select($table);
 		$this->assertEquals(
-			"Select Count(*) as `c` From `$table` Limit 1, 2",
+			"Select Count(*) as `c` From `$table` Limit 2, 1",
 			$select
 				->count()
 				->limit(1, 2)

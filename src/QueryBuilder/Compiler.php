@@ -43,7 +43,17 @@ class Compiler {
 		}
 
 		list($limit, $offset) = $_limit;
-		return !is_null($limit) ? " Limit $limit" . (!is_null($offset) ? ", $offset" : '') : '';
+		if (is_null($limit)) {
+			return '';
+		}
+
+		$parts = array();
+		if (!is_null($offset)) {
+			$parts[] = $offset;
+		}
+
+		$parts[] = $limit;
+		return ' Limit ' . implode(', ', $parts);
 	}
 
 	public function buildWhere($_wheres) {
@@ -226,7 +236,7 @@ class Compiler {
 		foreach ($_joinOns as $on) {
 			list($type, $localKey, $operator, $referenceKey) = $on;
 
-			if($this->isRaw($referenceKey)) {
+			if ($this->isRaw($referenceKey)) {
 				list($raw, $params) = $this->escapeRaw($referenceKey);
 				$referenceKey = $raw;
 				$this->addParameter($params);
@@ -234,9 +244,7 @@ class Compiler {
 				$referenceKey = $this->escape($referenceKey);
 			}
 
-			$ons[] = trim(
-				implode(' ', array(ucwords($type), $this->escape($localKey), $operator, $referenceKey))
-			);
+			$ons[] = trim(implode(' ', array(ucwords($type), $this->escape($localKey), $operator, $referenceKey)));
 		}
 
 		return implode(' ', $ons);
