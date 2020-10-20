@@ -209,12 +209,8 @@ class DB {
 		return new Raw($str, $params);
 	}
 
-	public function date($column) {
-		return new Func('Date', $column);
-	}
-
-	public function count($column) {
-		return new Func('Count', $column);
+	public function func() {
+		return new Func(...func_get_args());
 	}
 
 	/** Get how many time the script took from the begin of this object.
