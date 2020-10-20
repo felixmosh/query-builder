@@ -21,9 +21,7 @@ class Func {
 	/**
 	 * The constructor that assigns our value
 	 *
-	 * @param string $name
-	 * @param ...
-	 * @return void
+	 * @throws QueryBuilderException
 	 */
 	public function __construct() {
 		$arguments = func_get_args();

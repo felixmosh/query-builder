@@ -15,7 +15,8 @@ class Select extends Base {
 		foreach ($cols as $alias => $columnName) {
 			if (is_int($alias)) {
 				$this->column($columnName);
-			} else {
+			}
+			else {
 				$arr = array();
 				$arr[$alias] = $columnName;
 				$this->column($arr);
@@ -36,7 +37,8 @@ class Select extends Base {
 			$this->addColumn($columnName, $alias);
 
 			reset($column);
-		} elseif (is_string($column)) {
+		}
+		elseif (is_string($column)) {
 			$this->addColumn($column, null);
 		}
 
@@ -68,6 +70,19 @@ class Select extends Base {
 			$referenceKey = $operatorOrRefKey;
 			$operatorOrRefKey = '=';
 		}
+
+		// to make nested joins possible you can pass an closure
+		if (is_object($localKey) && ($localKey instanceof \Closure)) {
+			// create new query object
+			$joinOn = new JoinOn($table);
+
+			// run the closure callback on the sub query
+			call_user_func_array($localKey, array(&$joinOn));
+
+			$this->_joins[] = array($type, $table, $joinOn);
+			return $this;
+		}
+
 		$this->_joins[] = array($type, $table, $localKey, $operatorOrRefKey, $referenceKey);
 
 		return $this;

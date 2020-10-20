@@ -60,20 +60,17 @@ class Compiler {
 				list($raw, $params) = $this->escapeRaw($where[1]);
 				$where = array($where[0], $raw);
 				$this->addParameter($params);
-			}
-			elseif ($this->isSelect($where[3])) {
+			} elseif ($this->isSelect($where[3])) {
 				list($subquery, $params) = $where[3]->build();
 				$this->addParameter($params);
 				if ($where[1] === null) {
 					// exists case
 					unset($where[1]);
-				}
-				else {
+				} else {
 					$where[1] = $this->escape($where[1]);
 				}
 				$where[3] = '(' . $subquery . ')';
-			}
-			else {
+			} else {
 				$wrap_with_parenthesis = is_array($where[3]);
 				$where[1] = $this->escape($where[1]);
 				$where[3] = $this->parameterize($where[3]);
@@ -102,13 +99,11 @@ class Compiler {
 				list($sub_query, $params) = $columnName->build();
 				$this->addParameter($params);
 				$columnName = "({$sub_query})";
-			}
-			elseif (is_string($columnName) && substr(trim($columnName), -1 * strlen('.*')) === '.*') {
+			} elseif (is_string($columnName) && substr(trim($columnName), -1 * strlen('.*')) === '.*') {
 				$parts = explode('.', $columnName);
 				$lastPart = array_pop($parts);
 				$columnName = $this->escape(implode('.', $parts)) . '.' . trim($lastPart);
-			}
-			else {
+			} else {
 				$columnName = $this->escape($columnName);
 			}
 
@@ -178,13 +173,11 @@ class Compiler {
 			if (is_int($column)) {
 				$column = $value;
 				$value = $this->escape(new Func('Values', $column));
-			}
-			elseif ($this->isRaw($value)) {
+			} elseif ($this->isRaw($value)) {
 				list($raw, $params) = $this->escapeRaw($value);
 				$value = $raw;
 				$this->addParameter($params);
-			}
-			else {
+			} else {
 				$value = $this->parameterize($value);
 			}
 
@@ -204,14 +197,49 @@ class Compiler {
 		foreach ($_joins as $join) {
 			$type = $join[0];
 			$table = $this->escapeTable($join[1]);
-			$localKey = $this->escape($join[2]);
-			$referenceKey = $this->escape($join[4]);
 
-			$joins[] =
-				' ' . implode(' ', array(ucwords($type), 'Join', $table, 'On', $localKey, $join[3], $referenceKey));
+			if ($this->isJoinOn($join[2])) {
+				list($ons, $params) = $join[2]->build();
+				$this->addParameter($params);
+			} else {
+				$localKey = $this->escape($join[2]);
+				$referenceKey = $this->escape($join[4]);
+				$ons = implode(' ', array($localKey, $join[3], $referenceKey));
+			}
+
+			$joins[] = ' ' . implode(' ', array(ucwords($type), 'Join', $table, 'On', $ons));
 		}
 
 		return implode(' ', $joins);
+	}
+
+	public function buildJoinOns(array $_joinOns) {
+		if (empty($_joinOns)) {
+			return '';
+		}
+
+		$ons = array();
+
+		// Remove the type of the first element
+		$_joinOns[0][0] = '';
+
+		foreach ($_joinOns as $on) {
+			list($type, $localKey, $operator, $referenceKey) = $on;
+
+			if($this->isRaw($referenceKey)) {
+				list($raw, $params) = $this->escapeRaw($referenceKey);
+				$referenceKey = $raw;
+				$this->addParameter($params);
+			} else {
+				$referenceKey = $this->escape($referenceKey);
+			}
+
+			$ons[] = trim(
+				implode(' ', array(ucwords($type), $this->escape($localKey), $operator, $referenceKey))
+			);
+		}
+
+		return implode(' ', $ons);
 	}
 
 	/**
@@ -271,11 +299,9 @@ class Compiler {
 			if ($this->isRaw($string)) {
 				list($str) = $this->escapeRaw($string);
 				return $str;
-			}
-			elseif ($this->isFunction($string)) {
+			} elseif ($this->isFunction($string)) {
 				return $this->escapeFunction($string);
-			}
-			else {
+			} else {
 				throw new QueryBuilderException('Cannot escape object of class: ' . get_class($string));
 			}
 		}
@@ -347,8 +373,7 @@ class Compiler {
 			// otherwise continue with normal table
 			if ($allowAlias && !is_int(key($table))) {
 				$table = current($table) . ' as ' . key($table);
-			}
-			else {
+			} else {
 				$table = current($table);
 			}
 		}
@@ -381,8 +406,7 @@ class Compiler {
 			list($raw, $params) = $this->escapeRaw($value);
 			$this->addParameter($params);
 			return $raw;
-		}
-		elseif ($this->isFunction($value)) {
+		} elseif ($this->isFunction($value)) {
 			return $value->name() . '(' . $this->parameterize($value->arguments()) . ')';
 		}
 
@@ -392,6 +416,10 @@ class Compiler {
 
 	private function isSelect($any) {
 		return $any instanceof Select;
+	}
+
+	private function isJoinOn($any) {
+		return $any instanceof JoinOn;
 	}
 
 	/**

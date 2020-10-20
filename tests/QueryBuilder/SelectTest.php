@@ -380,65 +380,6 @@ final class SelectTest extends TestCase {
 		$this->assertEquals(array(1), $params);
 	}
 
-	public function testJoin() {
-		$table = 'table-name';
-
-		list($sql, $params) = (new Select($table))->join('joinedTable as j', 'j.col', '=', "$table.id")->build();
-
-		$this->assertEquals("Select * From `$table` Left Join `joinedTable` as `j` On `j`.`col` = `$table`.`id`", $sql);
-
-		$this->assertEmpty($params);
-	}
-
-	public function testLeftJoin() {
-		$table = 'table-name';
-
-		list($sql, $params) = (new Select($table))->leftJoin('joinedTable as j', 'j.col', '=', "$table.id")->build();
-
-		$this->assertEquals("Select * From `$table` Left Join `joinedTable` as `j` On `j`.`col` = `$table`.`id`", $sql);
-
-		$this->assertEmpty($params);
-	}
-
-	public function testRightJoin() {
-		$table = 'table-name';
-
-		list($sql, $params) = (new Select($table))->rightJoin('joinedTable as j', 'j.col', '=', "$table.id")->build();
-
-		$this->assertEquals(
-			"Select * From `$table` Right Join `joinedTable` as `j` On `j`.`col` = `$table`.`id`",
-			$sql
-		);
-
-		$this->assertEmpty($params);
-	}
-
-	public function testInnerJoin() {
-		$table = 'table-name';
-
-		list($sql, $params) = (new Select($table))->innerJoin('joinedTable as j', 'j.col', '=', "$table.id")->build();
-
-		$this->assertEquals(
-			"Select * From `$table` Inner Join `joinedTable` as `j` On `j`.`col` = `$table`.`id`",
-			$sql
-		);
-
-		$this->assertEmpty($params);
-	}
-
-	public function testOuterJoin() {
-		$table = 'table-name';
-
-		list($sql, $params) = (new Select($table))->outerJoin('joinedTable as j', 'j.col', '=', "$table.id")->build();
-
-		$this->assertEquals(
-			"Select * From `$table` Outer Join `joinedTable` as `j` On `j`.`col` = `$table`.`id`",
-			$sql
-		);
-
-		$this->assertEmpty($params);
-	}
-
 	public function testGet() {
 		$called = false;
 		$args = array();
@@ -457,16 +398,6 @@ final class SelectTest extends TestCase {
 
 		$this->assertEquals(array('Select * From `test`', array(), true), $args);
 		$this->assertEquals(array('col' => 'value'), $resultSet);
-	}
-
-	public function testJoinWithoutOperator() {
-		$table = 'table-name';
-
-		list($sql, $params) = (new Select($table))->leftJoin('joinedTable as j', 'j.col', "$table.id")->build();
-
-		$this->assertEquals("Select * From `$table` Left Join `joinedTable` as `j` On `j`.`col` = `$table`.`id`", $sql);
-
-		$this->assertEmpty($params);
 	}
 
 	public function testWithColumnHavingAsterisk() {
