@@ -50,7 +50,7 @@ final class DeleteTest extends TestCase {
 			->orderBy(array('bla'))
 			->build();
 
-		$this->assertEquals("Delete From `$table` Where `foo` = ? Order By `bla` asc", $sql);
+		$this->assertEquals("Delete From `$table` Where `foo` = ? Order By `bla` Asc", $sql);
 	}
 
 	public function testDeleteFullBlown() {
@@ -61,7 +61,7 @@ final class DeleteTest extends TestCase {
 			->limit(1, 2)
 			->build();
 
-		$this->assertEquals("Delete From `$table` as `alias` Where `foo` = ? Order By `bla` asc Limit 2, 1", $sql);
+		$this->assertEquals("Delete From `$table` as `alias` Where `foo` = ? Order By `bla` Asc Limit 2, 1", $sql);
 		$this->assertEquals(array('someValue'), $params);
 	}
 

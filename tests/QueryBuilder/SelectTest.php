@@ -178,7 +178,7 @@ final class SelectTest extends TestCase {
 
 		$select = new Select($table);
 		$this->assertEquals(
-			"Select * From `$table` Order By `bar` desc, `foo` asc, `baz` asc",
+			"Select * From `$table` Order By `bar` Desc, `foo` Asc, `baz` Asc",
 			$select
 				->orderBy(array('bar' => 'desc', 'foo'))
 				->orderBy('baz')

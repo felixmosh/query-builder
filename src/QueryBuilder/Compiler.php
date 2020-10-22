@@ -31,7 +31,7 @@ class Compiler {
 				$direction = 'asc';
 			}
 
-			$orders[] = "{$this->escape($col)} {$direction}";
+			$orders[] = $this->escape($col) . ' ' . ucwords($direction);
 		}
 
 		return ' Order By ' . implode(', ', $orders);
