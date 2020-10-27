@@ -1,10 +1,10 @@
 <?php
+
 namespace QueryBuilder\Tests\QueryBuilder;
 
 use PHPUnit\Framework\TestCase;
 use QueryBuilder\QueryBuilder\Raw;
 use QueryBuilder\QueryBuilder\Select;
-
 
 final class SelectTest extends TestCase {
 	public function testSelectWithAsterisk() {
@@ -408,5 +408,27 @@ final class SelectTest extends TestCase {
 		$this->assertEquals("Select `t`.* From `$table` as `t`", $sql);
 
 		$this->assertEmpty($params);
+	}
+
+	public function testSubQueryWithIn() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select(array('t' => $table)))
+			->column('t.* ')
+			->whereIn(
+				'col',
+				(new Select("$table as inner"))
+					->column('id')
+					->where('inner.col', 1)
+					->limit(50)
+			)
+			->build();
+
+		$this->assertEquals(
+			"Select `t`.* From `$table` as `t` Where `col` In (Select `id` From `$table` as `inner` Where `inner`.`col` = ? Limit 50)",
+			$sql
+		);
+
+		$this->assertEquals(array(1), $params);
 	}
 }

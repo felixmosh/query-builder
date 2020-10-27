@@ -76,8 +76,8 @@ abstract class Base {
 		return $this->where($col, $param1, $param2, 'and');
 	}
 
-	public function whereIn($column, array $values = array(), $not = false) {
-		if (empty($values)) {
+	public function whereIn($column, $values = array(), $not = false) {
+		if (is_array($values) && empty($values)) {
 			return $this;
 		}
 
