@@ -279,7 +279,7 @@ class DB {
 			$stmtParams[] = &$bindParams[$prop];
 		}
 
-		if (!empty($stmtParams)) {
+		if (empty($bindParams)) {
 			call_user_func_array(array($stmt, 'bind_param'), $stmtParams);
 		}
 	}
