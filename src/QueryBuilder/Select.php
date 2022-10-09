@@ -38,7 +38,7 @@ class Select extends Base {
 
 			reset($column);
 		}
-		elseif (is_string($column)) {
+		elseif (is_string($column) || $this->isRaw($column)) {
 			$this->addColumn($column, null);
 		}
 

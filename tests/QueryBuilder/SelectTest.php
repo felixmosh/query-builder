@@ -89,6 +89,17 @@ final class SelectTest extends TestCase {
 		);
 	}
 
+    public function testRawColumn() {
+        $table = 'table-name';
+        $column = 'column-name';
+
+        $select = new Select($table);
+        $this->assertEquals(
+            "Select `$column` From `$table`",
+            $select->column(new Raw('??', array($column)))->toString()
+        );
+    }
+
 	public function testRawColumns() {
 		$table = 'table-name';
 		$column = 'column-name';
