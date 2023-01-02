@@ -203,6 +203,7 @@ class Compiler {
 		if (empty($_joins)) {
 			return '';
 		}
+
 		$joins = array();
 		foreach ($_joins as $join) {
 			$type = $join[0];
