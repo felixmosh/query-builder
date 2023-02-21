@@ -48,28 +48,71 @@ abstract class Base {
 	}
 
 	public function where($col, $param1 = null, $param2 = null, $type = 'and') {
-		$originalType = $type;
-		if (empty($this->_wheres)) {
-			$type = 'where';
-		}
-
 		if ($param1 !== null && $param2 !== null && $this->isAllowedOperator($param1)) {
 			$this->addWhere($type, $col, $param1, $param2);
 		} elseif ($param1 !== null && !$this->isAllowedOperator($param1)) {
 			$this->addWhere($type, $col, '=', $param1);
 		} elseif ($param1 === null && $param2 === null && is_array($col)) {
 			foreach ($col as $columnName => $param2) {
-				$this->where($columnName, '=', $param2, $originalType);
+				$this->where($columnName, '=', $param2, $type);
 			}
 		} elseif ($param1 === null && $param2 === null && $this->isRaw($col)) {
 			$this->addWhere($type, $col, null, null);
-		}
+		} elseif ($param1 === null && $param2 === null && $col instanceof \Closure) {
+			// create new query object
+			$innerWhere = new Where();
 
+			// run the closure callback on the sub query
+			call_user_func_array($col, array(&$innerWhere));
+
+			$this->_wheres[] = array($type, $innerWhere);
+			return $this;
+		}
 		return $this;
 	}
 
 	public function orWhere($col, $param1 = null, $param2 = null) {
 		return $this->where($col, $param1, $param2, 'or');
+	}
+	public function orWhereIn($column, $values = array(), $not = false) {
+		if (is_array($values) && empty($values)) {
+			return $this;
+		}
+
+		return $this->where($column, ($not ? 'Not ' : '') . 'In', $values, 'or');
+	}
+
+	public function orWhereNotIn($column, array $values = array()) {
+		return $this->orWhereIn($column, $values, true);
+	}
+
+	public function orWhereNull($column, $not = false) {
+		return $this->where($column, 'Is' . ($not ? ' Not' : ''), new Raw('Null'), 'or');
+	}
+
+	public function orWhereNotNull($column) {
+		return $this->orWhereNull($column, true);
+	}
+
+	public function orWhereBetween($column, $value1, $value2, $not = false) {
+		return $this->where(
+			$column,
+			($not ? 'Not ' : '') . 'Between',
+			new Raw('? And ?', array($value1, $value2)),
+			'or'
+		);
+	}
+
+	public function orWhereNotBetween($column, $value1, $value2) {
+		return $this->orWhereBetween($column, $value1, $value2, true);
+	}
+
+	public function orWhereExists($subquery, $not = false) {
+		return $this->where(null, ($not ? 'Not ' : '') . 'Exists', $subquery, 'or');
+	}
+
+	public function orWhereNotExists($subquery) {
+		return $this->orWhereExists($subquery, true);
 	}
 
 	public function andWhere($col, $param1 = null, $param2 = null) {

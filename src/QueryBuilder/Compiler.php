@@ -63,8 +63,8 @@ class Compiler {
 
 		$wheres = array();
 
-		foreach ($_wheres as $where) {
-			$where[0] = ' ' . ucwords($where[0]);
+		foreach ($_wheres as $index => $where) {
+			$where[0] = $index === 0 ? ' Where' : ucwords($where[0]);
 
 			if ($this->isRaw($where[1])) {
 				list($raw, $params) = $this->escapeRaw($where[1]);
@@ -80,6 +80,11 @@ class Compiler {
 					$where[1] = $this->escape($where[1]);
 				}
 				$where[3] = '(' . $subquery . ')';
+			} elseif ($this->isWhere($where[1])) {
+				list($innerClause, $params) = $where[1]->build();
+				$this->addParameter($params);
+
+				$where[1] = '(' . $innerClause . ')';
 			} else {
 				$wrap_with_parenthesis = is_array($where[3]);
 				$where[1] = $this->escape($where[1]);
@@ -92,7 +97,7 @@ class Compiler {
 			$wheres[] = implode(' ', $where);
 		}
 
-		return implode('', $wheres);
+		return implode(' ', $wheres);
 	}
 
 	public function buildColumns($_columns) {
@@ -425,6 +430,10 @@ class Compiler {
 
 	private function isSelect($any) {
 		return $any instanceof Select;
+	}
+
+	private function isWhere($any) {
+		return $any instanceof Where;
 	}
 
 	private function isJoinOn($any) {

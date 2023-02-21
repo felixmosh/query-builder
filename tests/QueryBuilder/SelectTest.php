@@ -89,16 +89,16 @@ final class SelectTest extends TestCase {
 		);
 	}
 
-    public function testRawColumn() {
-        $table = 'table-name';
-        $column = 'column-name';
+	public function testRawColumn() {
+		$table = 'table-name';
+		$column = 'column-name';
 
-        $select = new Select($table);
-        $this->assertEquals(
-            "Select `$column` From `$table`",
-            $select->column(new Raw('??', array($column)))->toString()
-        );
-    }
+		$select = new Select($table);
+		$this->assertEquals(
+			"Select `$column` From `$table`",
+			$select->column(new Raw('??', array($column)))->toString()
+		);
+	}
 
 	public function testRawColumns() {
 		$table = 'table-name';
@@ -339,6 +339,115 @@ final class SelectTest extends TestCase {
 		$this->assertEquals("Select * From `$table` Where `foo` Between ? And ? And `bar` Not Between ? And ?", $sql);
 
 		$this->assertEquals(array('2020-01-01', '2020-09-20', '2020-02-01', '2020-10-20'), $params);
+	}
+
+	public function testOrWhereIn() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->where('foo', '1')
+			->orWhereIn('bar', array('2020-02-01', '2020-10-20'))
+			->build();
+
+		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` In (?, ?)', $sql);
+
+		$this->assertEquals(array('1', '2020-02-01', '2020-10-20'), $params);
+	}
+
+	public function testOrWhereNotIn() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->where('foo', '1')
+			->orWhereNotIn('bar', array('2020-02-01', '2020-10-20'))
+			->build();
+
+		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Not In (?, ?)', $sql);
+
+		$this->assertEquals(array('1', '2020-02-01', '2020-10-20'), $params);
+	}
+
+	public function testOrWhereNull() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->where('foo', '1')
+			->orWhereNull('bar')
+			->build();
+
+		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Is Null', $sql);
+
+		$this->assertEquals(array('1'), $params);
+	}
+
+	public function testOrWhereNotNull() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->where('foo', '1')
+			->orWhereNotNull('bar')
+			->build();
+
+		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Is Not Null', $sql);
+
+		$this->assertEquals(array('1'), $params);
+	}
+
+	public function testOrWhereBetween() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->where('foo', '1')
+			->orWhereBetween('bar', 2, 3)
+			->build();
+
+		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Between ? And ?', $sql);
+
+		$this->assertEquals(array('1', 2, 3), $params);
+	}
+
+	public function testOrWhereNotBetween() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->where('foo', '1')
+			->orWhereNotBetween('bar', 2, 3)
+			->build();
+
+		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Not Between ? And ?', $sql);
+
+		$this->assertEquals(array('1', 2, 3), $params);
+	}
+
+	public function testOrWhereExists() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->orWhereExists((new Select('sub-table'))->column('id')->where('id', 1))
+			->orWhereNotExists((new Select('sub-table2'))->column('id')->where('id', 2))
+			->build();
+
+		$this->assertEquals(
+			"Select * From `$table` Where Exists (Select `id` From `sub-table` Where `id` = ?) Or Not Exists (Select `id` From `sub-table2` Where `id` = ?)",
+			$sql
+		);
+
+		$this->assertEquals(array(1, 2), $params);
+	}
+
+	public function testNestedWhere() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->where('foo', '1')
+			->where(function ($qb) {
+				$qb->where('bar', 2)->orWhereIn('baz', array(3, 4));
+			})
+			->build();
+
+		$this->assertEquals("Select * From `$table` Where `foo` = ? And (`bar` = ? Or `baz` In (?, ?))", $sql);
+
+		$this->assertEquals(array('1', 2, 3, 4), $params);
 	}
 
 	public function testRawQuery() {
