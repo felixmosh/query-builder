@@ -23,7 +23,11 @@ class Where extends Base {
 		}
 
 		$where = $compiler->buildWhere($this->_wheres);
-		$where = substr($where, strlen(' Where '));
+		$whereParts = explode(' ', trim($where));
+		if (strtolower($whereParts[0]) === 'where') {
+			$whereParts = array_slice($whereParts, 1);
+		}
+		$where = implode(' ', $whereParts);
 		$params = $compiler->params();
 
 		return array($where, $params);

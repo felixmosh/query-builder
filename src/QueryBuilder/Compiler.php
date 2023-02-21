@@ -70,6 +70,11 @@ class Compiler {
 				list($raw, $params) = $this->escapeRaw($where[1]);
 				$where = array($where[0], $raw);
 				$this->addParameter($params);
+			} elseif ($this->isWhere($where[1])) {
+				list($innerClause, $params) = $where[1]->build();
+				$this->addParameter($params);
+
+				$where[1] = '(' . $innerClause . ')';
 			} elseif ($this->isSelect($where[3])) {
 				list($subquery, $params) = $where[3]->build();
 				$this->addParameter($params);
@@ -80,11 +85,6 @@ class Compiler {
 					$where[1] = $this->escape($where[1]);
 				}
 				$where[3] = '(' . $subquery . ')';
-			} elseif ($this->isWhere($where[1])) {
-				list($innerClause, $params) = $where[1]->build();
-				$this->addParameter($params);
-
-				$where[1] = '(' . $innerClause . ')';
 			} else {
 				$wrap_with_parenthesis = is_array($where[3]);
 				$where[1] = $this->escape($where[1]);
