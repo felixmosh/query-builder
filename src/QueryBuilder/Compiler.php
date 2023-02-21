@@ -294,7 +294,7 @@ class Compiler {
 	}
 
 	/**
-	 * Escape an array of items an seprate them with a comma
+	 * Escape an array of items a separate them with a comma
 	 *
 	 * @param array $array
 	 * @return string
