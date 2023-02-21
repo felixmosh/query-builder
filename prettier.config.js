@@ -1,5 +1,5 @@
 module.exports = {
-	phpVersion: '5.3',
+	phpVersion: '7.0',
 	printWidth: 120,
 	braceStyle: '1tbs',
 	singleQuote: true,

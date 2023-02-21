@@ -5,7 +5,7 @@ namespace QueryBuilder\QueryBuilder;
 use QueryBuilder\Exception\QueryBuilderException;
 
 class Compiler {
-	private $_parameters = array();
+	private $_parameters = [];
 
 	public function params() {
 		return $this->_parameters;
@@ -24,7 +24,7 @@ class Compiler {
 			return '';
 		}
 
-		$orders = array();
+		$orders = [];
 		foreach ($_orderBy as $col => $direction) {
 			if (is_int($col)) {
 				$col = $direction;
@@ -47,7 +47,7 @@ class Compiler {
 			return '';
 		}
 
-		$parts = array();
+		$parts = [];
 		if (!is_null($offset)) {
 			$parts[] = $offset;
 		}
@@ -61,14 +61,14 @@ class Compiler {
 			return '';
 		}
 
-		$wheres = array();
+		$wheres = [];
 
 		foreach ($_wheres as $index => $where) {
 			$where[0] = $index === 0 ? ' Where' : ucwords($where[0]);
 
 			if ($this->isRaw($where[1])) {
 				list($raw, $params) = $this->escapeRaw($where[1]);
-				$where = array($where[0], $raw);
+				$where = [$where[0], $raw];
 				$this->addParameter($params);
 			} elseif ($this->isWhere($where[1])) {
 				list($innerClause, $params) = $where[1]->build();
@@ -105,7 +105,7 @@ class Compiler {
 			return '*';
 		}
 
-		$columns = array();
+		$columns = [];
 		foreach ($_columns as $column) {
 			list($columnName, $alias) = $column;
 
@@ -139,7 +139,7 @@ class Compiler {
 			return '';
 		}
 
-		$groups = array();
+		$groups = [];
 		foreach ($_groupBy as $col) {
 			$groups[] = $this->escape($col);
 		}
@@ -156,7 +156,7 @@ class Compiler {
 			return '';
 		}
 
-		$values = array();
+		$values = [];
 		foreach ($_values as $column => $value) {
 			$values[] = $this->escape($column) . ' = ' . $this->parameterize($value);
 		}
@@ -169,7 +169,7 @@ class Compiler {
 			return '';
 		}
 
-		$values = array();
+		$values = [];
 		foreach ($_values as $value) {
 			$values[] = '(' . $this->parameterize($value) . ')';
 		}
@@ -182,7 +182,7 @@ class Compiler {
 			return '';
 		}
 
-		$duplicates = array();
+		$duplicates = [];
 
 		foreach ($_duplicateUpdates as $column => $value) {
 			if (is_int($column)) {
@@ -198,7 +198,7 @@ class Compiler {
 
 			$column = $this->escape($column);
 
-			$duplicates[] = implode(' = ', array($column, $value));
+			$duplicates[] = implode(' = ', [$column, $value]);
 		}
 
 		return ' On Duplicate Key Update ' . implode(', ', $duplicates);
@@ -209,7 +209,7 @@ class Compiler {
 			return '';
 		}
 
-		$joins = array();
+		$joins = [];
 		foreach ($_joins as $join) {
 			$type = $join[0];
 			$table = $this->escapeTable($join[1]);
@@ -220,10 +220,10 @@ class Compiler {
 			} else {
 				$localKey = $this->escape($join[2]);
 				$referenceKey = $this->escape($join[4]);
-				$ons = implode(' ', array($localKey, $join[3], $referenceKey));
+				$ons = implode(' ', [$localKey, $join[3], $referenceKey]);
 			}
 
-			$joins[] = ' ' . implode(' ', array(ucwords($type), 'Join', $table, 'On', $ons));
+			$joins[] = ' ' . implode(' ', [ucwords($type), 'Join', $table, 'On', $ons]);
 		}
 
 		return implode(' ', $joins);
@@ -234,7 +234,7 @@ class Compiler {
 			return '';
 		}
 
-		$ons = array();
+		$ons = [];
 
 		// Remove the type of the first element
 		$_joinOns[0][0] = '';
@@ -250,7 +250,7 @@ class Compiler {
 				$referenceKey = $this->escape($referenceKey);
 			}
 
-			$ons[] = trim(implode(' ', array(ucwords($type), $this->escape($localKey), $operator, $referenceKey)));
+			$ons[] = trim(implode(' ', [ucwords($type), $this->escape($localKey), $operator, $referenceKey]));
 		}
 
 		return implode(' ', $ons);
@@ -265,7 +265,7 @@ class Compiler {
 	 * @var string
 	 */
 	protected function escapeIdentifier($identifier) {
-		return '`' . str_replace(array('`', "\0"), array('``', ''), $identifier) . '`';
+		return '`' . str_replace(['`', "\0"], ['``', ''], $identifier) . '`';
 	}
 
 	protected function escapeRaw($raw) {
@@ -290,7 +290,7 @@ class Compiler {
 			$param_index
 		);
 
-		return array($str, $params);
+		return [$str, $params];
 	}
 
 	/**
@@ -401,7 +401,7 @@ class Compiler {
 
 	protected function addParameter($params) {
 		if (!is_array($params)) {
-			$params = array($params);
+			$params = [$params];
 		}
 
 		foreach ($params as $param) {
@@ -448,7 +448,7 @@ class Compiler {
 	 */
 	private function parameterize($params) {
 		if (!is_array($params)) {
-			$params = array($params);
+			$params = [$params];
 		}
 
 		foreach ($params as $key => $param) {

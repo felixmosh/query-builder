@@ -3,7 +3,7 @@
 namespace QueryBuilder\QueryBuilder;
 
 class Update extends Base {
-	private $_values = array();
+	private $_values = [];
 
 	public function set($param1, $param2 = null) {
 		if (empty($param1)) {
@@ -12,7 +12,7 @@ class Update extends Base {
 
 		// like: set( 'name', 'Lu' ); instead of set( array( 'name' => 'Lu' ) );
 		if (!is_null($param2)) {
-			$param1 = array($param1 => $param2);
+			$param1 = [$param1 => $param2];
 		}
 
 		$this->_values = array_merge($this->_values, $param1);
@@ -25,7 +25,7 @@ class Update extends Base {
 
 		if ($this->isRaw($this->_rawQuery)) {
 			$sql = $compiler->buildRaw($this->_rawQuery);
-			return array($sql, $compiler->params());
+			return [$sql, $compiler->params()];
 		}
 
 		$table = $compiler->buildTable($this->_table_name, $this->_database);
@@ -37,6 +37,6 @@ class Update extends Base {
 		$sql = "Update {$table} Set {$updateValues}{$where}{$orderBy}{$limit}";
 		$params = $compiler->params();
 
-		return array($sql, $params);
+		return [$sql, $params];
 	}
 }

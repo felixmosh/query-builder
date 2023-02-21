@@ -8,21 +8,21 @@ class JoinOn extends Base {
 	 *
 	 * @var array
 	 */
-	protected $_ons = array();
+	protected $_ons = [];
 
 	public function build() {
 		$compiler = new Compiler();
 
 		if ($this->isRaw($this->_rawQuery)) {
 			$sql = $compiler->buildRaw($this->_rawQuery);
-			return array($sql, $compiler->params());
+			return [$sql, $compiler->params()];
 		}
 
 		$ons = $compiler->buildJoinOns($this->_ons);
 
 		$params = $compiler->params();
 
-		return array($ons, $params);
+		return [$ons, $params];
 	}
 
 	/**
@@ -40,7 +40,7 @@ class JoinOn extends Base {
 			$operatorOrRefKey = '=';
 		}
 
-		$this->_ons[] = array($type, $localKey, $operatorOrRefKey, $referenceKey);
+		$this->_ons[] = [$type, $localKey, $operatorOrRefKey, $referenceKey];
 		return $this;
 	}
 

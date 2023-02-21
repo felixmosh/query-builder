@@ -3,8 +3,8 @@
 namespace QueryBuilder\QueryBuilder;
 
 class Insert extends Base {
-	private $_values = array();
-	private $_duplicateUpdates = array();
+	private $_values = [];
+	private $_duplicateUpdates = [];
 	private $_ignore = false;
 
 	public function columns($columns) {
@@ -15,13 +15,13 @@ class Insert extends Base {
 		return $this;
 	}
 
-	public function values($values = array()) {
+	public function values($values = []) {
 		if (empty($values)) {
 			return $this;
 		}
 
 		if (is_array($values) && (!array_key_exists(0, $values) || !is_array($values[0]))) {
-			$values = array($values);
+			$values = [$values];
 		}
 
 		if (empty($this->_columns) && $this->isAssocArray($values[0])) {
@@ -48,7 +48,7 @@ class Insert extends Base {
 
 		if ($this->isRaw($this->_rawQuery)) {
 			$sql = $compiler->buildRaw($this->_rawQuery);
-			return array($sql, $compiler->params());
+			return [$sql, $compiler->params()];
 		}
 
 		$table = $compiler->buildTable($this->_table_name, $this->_database);
@@ -61,7 +61,7 @@ class Insert extends Base {
 		$sql = "Insert{$ignore} Into {$table}{$columns} Values {$values}{$duplicates}";
 		$params = $compiler->params();
 
-		return array($sql, $params);
+		return [$sql, $params];
 	}
 
 	public function ignore($ignore = true) {

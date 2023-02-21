@@ -4,8 +4,8 @@ namespace QueryBuilder\QueryBuilder;
 
 class Select extends Base {
 	protected $_distinct = false;
-	protected $_groupBy = array();
-	protected $_joins = array();
+	protected $_groupBy = [];
+	protected $_joins = [];
 
 	public function columns($cols) {
 		if (!is_array($cols)) {
@@ -15,9 +15,8 @@ class Select extends Base {
 		foreach ($cols as $alias => $columnName) {
 			if (is_int($alias)) {
 				$this->column($columnName);
-			}
-			else {
-				$arr = array();
+			} else {
+				$arr = [];
 				$arr[$alias] = $columnName;
 				$this->column($arr);
 			}
@@ -37,8 +36,7 @@ class Select extends Base {
 			$this->addColumn($columnName, $alias);
 
 			reset($column);
-		}
-		elseif (is_string($column) || $this->isRaw($column)) {
+		} elseif (is_string($column) || $this->isRaw($column)) {
 			$this->addColumn($column, null);
 		}
 
@@ -59,7 +57,7 @@ class Select extends Base {
 		return $this;
 	}
 
-	public function groupBy($params = array()) {
+	public function groupBy($params = []) {
 		$this->addToList($params, $this->_groupBy);
 
 		return $this;
@@ -72,18 +70,18 @@ class Select extends Base {
 		}
 
 		// to make nested joins possible you can pass an closure
-		if (is_object($localKey) && ($localKey instanceof \Closure)) {
+		if (is_object($localKey) && $localKey instanceof \Closure) {
 			// create new query object
 			$joinOn = new JoinOn($table);
 
 			// run the closure callback on the sub query
-			call_user_func_array($localKey, array(&$joinOn));
+			call_user_func_array($localKey, [&$joinOn]);
 
-			$this->_joins[] = array($type, $table, $joinOn);
+			$this->_joins[] = [$type, $table, $joinOn];
 			return $this;
 		}
 
-		$this->_joins[] = array($type, $table, $localKey, $operatorOrRefKey, $referenceKey);
+		$this->_joins[] = [$type, $table, $localKey, $operatorOrRefKey, $referenceKey];
 
 		return $this;
 	}
@@ -109,7 +107,7 @@ class Select extends Base {
 
 		if ($this->isRaw($this->_rawQuery)) {
 			$sql = $compiler->buildRaw($this->_rawQuery);
-			return array($sql, $compiler->params());
+			return [$sql, $compiler->params()];
 		}
 
 		$distinct = $this->_distinct ? ' Distinct' : '';
@@ -124,7 +122,7 @@ class Select extends Base {
 		$sql = "Select{$distinct} {$columns} From {$table}{$joins}{$where}{$groupBy}{$orderBy}{$limit}";
 		$params = $compiler->params();
 
-		return array($sql, $params);
+		return [$sql, $params];
 	}
 
 	public function get() {
@@ -133,7 +131,7 @@ class Select extends Base {
 
 	private function normalizeFunctionArgs($col, $alias) {
 		if (is_string($col) || is_null($col)) {
-			$arr = array();
+			$arr = [];
 			$arr[$alias] = $col;
 			$col = $arr;
 		}
@@ -143,6 +141,6 @@ class Select extends Base {
 
 		reset($col);
 
-		return array($columnName, $alias);
+		return [$columnName, $alias];
 	}
 }

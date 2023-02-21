@@ -12,14 +12,14 @@ class Where extends Base {
 	 *
 	 * @var array
 	 */
-	protected $_wheres = array();
+	protected $_wheres = [];
 
 	public function build() {
 		$compiler = new Compiler();
 
 		if ($this->isRaw($this->_rawQuery)) {
 			$sql = $compiler->buildRaw($this->_rawQuery);
-			return array($sql, $compiler->params());
+			return [$sql, $compiler->params()];
 		}
 
 		$where = $compiler->buildWhere($this->_wheres);
@@ -30,6 +30,6 @@ class Where extends Base {
 		$where = implode(' ', $whereParts);
 		$params = $compiler->params();
 
-		return array($where, $params);
+		return [$where, $params];
 	}
 }

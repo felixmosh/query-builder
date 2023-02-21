@@ -2,7 +2,6 @@
 
 namespace QueryBuilder\QueryBuilder;
 
-
 class Delete extends Base {
 	public function get() {
 		return $this->build();
@@ -13,7 +12,7 @@ class Delete extends Base {
 
 		if ($this->isRaw($this->_rawQuery)) {
 			$sql = $compiler->buildRaw($this->_rawQuery);
-			return array($sql, $compiler->params());
+			return [$sql, $compiler->params()];
 		}
 
 		$table = $compiler->buildTable($this->_table_name, $this->_database);
@@ -24,6 +23,6 @@ class Delete extends Base {
 		$sql = "Delete From {$table}{$where}{$orderBy}{$limit}";
 		$params = $compiler->params();
 
-		return array($sql, $params);
+		return [$sql, $params];
 	}
 }

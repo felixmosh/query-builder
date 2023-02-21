@@ -143,7 +143,7 @@ class DB {
 	 */
 	public function select($tableName, $postProcess = null) {
 		if ($this->mysqli === null) {
-			return array();
+			return [];
 		}
 
 		$queryBuilder = new Select($tableName);
@@ -205,7 +205,7 @@ class DB {
 	 * @param $params array
 	 * @return Raw
 	 */
-	public function raw($str, $params = array()) {
+	public function raw($str, $params = []) {
 		return new Raw($str, $params);
 	}
 
@@ -272,7 +272,7 @@ class DB {
 		if (!is_array($bindParams)) {
 			return;
 		}
-		$stmtParams = array('');
+		$stmtParams = [''];
 
 		foreach ($bindParams as $prop => $val) {
 			$stmtParams[0] .= $this->determineType($val);
@@ -280,7 +280,7 @@ class DB {
 		}
 
 		if (!empty($bindParams)) {
-			call_user_func_array(array($stmt, 'bind_param'), $stmtParams);
+			call_user_func_array([$stmt, 'bind_param'], $stmtParams);
 		}
 	}
 
@@ -295,19 +295,19 @@ class DB {
 		//Update the num rows
 		$stmt->store_result();
 
-		$parameters = array();
-		$results = array();
+		$parameters = [];
+		$results = [];
 
 		$meta = $stmt->result_metadata();
-		$row = array();
+		$row = [];
 		while ($field = $meta->fetch_field()) {
 			$parameters[] = &$row[$field->name];
 		}
 
-		call_user_func_array(array($stmt, 'bind_result'), $parameters);
+		call_user_func_array([$stmt, 'bind_result'], $parameters);
 
 		while ($stmt->fetch()) {
-			$x = array();
+			$x = [];
 			foreach ($row as $key => $val) {
 				$x[$key] = $val;
 			}
@@ -338,8 +338,7 @@ class DB {
 			$this->debug($query, $error, 'error');
 
 			die();
-		}
-		else {
+		} else {
 			$this->logError($query);
 			throw new Exception('ERROR.SERVER_ERROR');
 		}
@@ -460,13 +459,13 @@ margin-top: 1.5rem;
 			}
 		}
 
-		$err = array(
+		$err = [
 			'dateTime' => date('H:i:s d-m-Y  (T)'),
 			'query' => $query,
-			'error' => array('type' => 'SQLError', 'msg' => $this->mysqli->error),
-			'script' => array('name' => $stack_trace[$i - 1]['file'], 'line' => $stack_trace[$i - 1]['line']),
+			'error' => ['type' => 'SQLError', 'msg' => $this->mysqli->error],
+			'script' => ['name' => $stack_trace[$i - 1]['file'], 'line' => $stack_trace[$i - 1]['line']],
 			'ip' => $_SERVER['REMOTE_ADDR'],
-		);
+		];
 
 		$this->logger->error(json_encode($err));
 	}
@@ -483,8 +482,7 @@ margin-top: 1.5rem;
 
 			if ($queryBuilder instanceof Select) {
 				$results = $this->dynamicBindResults($stmt);
-			}
-			else {
+			} else {
 				$results = $stmt->insert_id ? $stmt->insert_id : $stmt->affected_rows;
 			}
 

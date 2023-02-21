@@ -1,4 +1,5 @@
 <?php
+
 namespace QueryBuilder\QueryBuilder;
 
 class Raw {
@@ -16,7 +17,7 @@ class Raw {
 	 * @param string $value
 	 * @param array $params
 	 */
-	public function __construct($value, $params = array()) {
+	public function __construct($value, $params = []) {
 		$this->value = $value;
 		$this->params = $params;
 	}

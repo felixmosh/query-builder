@@ -1,4 +1,5 @@
 <?php
+
 namespace QueryBuilder\QueryBuilder;
 
 use QueryBuilder\Exception\QueryBuilderException;
@@ -16,7 +17,7 @@ class Func {
 	 *
 	 * @param array
 	 */
-	protected $arguments = array();
+	protected $arguments = [];
 
 	/**
 	 * The constructor that assigns our value

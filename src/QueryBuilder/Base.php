@@ -10,7 +10,7 @@ use Closure;
  * @package QueryBuilder
  */
 abstract class Base {
-	public static $ALLOWED_OPERATIONS = array(
+	public static $ALLOWED_OPERATIONS = [
 		'=',
 		'<',
 		'>',
@@ -27,14 +27,14 @@ abstract class Base {
 		'not between',
 		'exists',
 		'not exists',
-	);
+	];
 	protected $_debug = false;
 	protected $_table_name;
 	protected $_database;
-	protected $_columns = array();
-	protected $_wheres = array();
-	protected $_limit = array();
-	protected $_orderBy = array();
+	protected $_columns = [];
+	protected $_wheres = [];
+	protected $_limit = [];
+	protected $_orderBy = [];
 	protected $_rawQuery = null;
 	protected $callback;
 
@@ -63,9 +63,9 @@ abstract class Base {
 			$innerWhere = new Where();
 
 			// run the closure callback on the sub query
-			call_user_func_array($col, array(&$innerWhere));
+			call_user_func_array($col, [&$innerWhere]);
 
-			$this->_wheres[] = array($type, $innerWhere);
+			$this->_wheres[] = [$type, $innerWhere];
 			return $this;
 		}
 		return $this;
@@ -74,7 +74,8 @@ abstract class Base {
 	public function orWhere($col, $param1 = null, $param2 = null) {
 		return $this->where($col, $param1, $param2, 'or');
 	}
-	public function orWhereIn($column, $values = array(), $not = false) {
+
+	public function orWhereIn($column, $values = [], $not = false) {
 		if (is_array($values) && empty($values)) {
 			return $this;
 		}
@@ -82,7 +83,7 @@ abstract class Base {
 		return $this->where($column, ($not ? 'Not ' : '') . 'In', $values, 'or');
 	}
 
-	public function orWhereNotIn($column, array $values = array()) {
+	public function orWhereNotIn($column, array $values = []) {
 		return $this->orWhereIn($column, $values, true);
 	}
 
@@ -95,12 +96,7 @@ abstract class Base {
 	}
 
 	public function orWhereBetween($column, $value1, $value2, $not = false) {
-		return $this->where(
-			$column,
-			($not ? 'Not ' : '') . 'Between',
-			new Raw('? And ?', array($value1, $value2)),
-			'or'
-		);
+		return $this->where($column, ($not ? 'Not ' : '') . 'Between', new Raw('? And ?', [$value1, $value2]), 'or');
 	}
 
 	public function orWhereNotBetween($column, $value1, $value2) {
@@ -119,7 +115,7 @@ abstract class Base {
 		return $this->where($col, $param1, $param2, 'and');
 	}
 
-	public function whereIn($column, $values = array(), $not = false) {
+	public function whereIn($column, $values = [], $not = false) {
 		if (is_array($values) && empty($values)) {
 			return $this;
 		}
@@ -127,7 +123,7 @@ abstract class Base {
 		return $this->where($column, ($not ? 'Not ' : '') . 'In', $values);
 	}
 
-	public function whereNotIn($column, array $values = array()) {
+	public function whereNotIn($column, array $values = []) {
 		return $this->whereIn($column, $values, true);
 	}
 
@@ -140,7 +136,7 @@ abstract class Base {
 	}
 
 	public function whereBetween($column, $value1, $value2, $not = false) {
-		return $this->where($column, ($not ? 'Not ' : '') . 'Between', new Raw('? And ?', array($value1, $value2)));
+		return $this->where($column, ($not ? 'Not ' : '') . 'Between', new Raw('? And ?', [$value1, $value2]));
 	}
 
 	public function whereNotBetween($column, $value1, $value2) {
@@ -156,11 +152,11 @@ abstract class Base {
 	}
 
 	public function limit($limit = null, $offset = null) {
-		$this->_limit = array($limit, $offset);
+		$this->_limit = [$limit, $offset];
 		return $this;
 	}
 
-	public function orderBy($params = array()) {
+	public function orderBy($params = []) {
 		$this->addToList($params, $this->_orderBy);
 
 		return $this;
@@ -170,7 +166,7 @@ abstract class Base {
 		list($sql, $params) = $this->build();
 
 		if (is_callable($this->callback) && $this->callback instanceof Closure) {
-			return call_user_func_array($this->callback, array($sql, $params, $this->_debug));
+			return call_user_func_array($this->callback, [$sql, $params, $this->_debug]);
 		}
 
 		return null;
@@ -212,11 +208,11 @@ abstract class Base {
 	}
 
 	protected function addWhere($type, $columnName, $operation, $value) {
-		$this->_wheres[] = array($type, $columnName, $operation, $value);
+		$this->_wheres[] = [$type, $columnName, $operation, $value];
 	}
 
 	protected function addColumn($columnName, $alias) {
-		$this->_columns[] = array($columnName, $alias);
+		$this->_columns[] = [$columnName, $alias];
 	}
 
 	protected function addToList($params, &$list) {
