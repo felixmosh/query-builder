@@ -7,7 +7,7 @@ use QueryBuilder\Exception\QueryBuilderException;
 class Compiler {
 	private $_parameters = [];
 
-	public function params() {
+	public function params(): array {
 		return $this->_parameters;
 	}
 
@@ -19,7 +19,7 @@ class Compiler {
 		return $str;
 	}
 
-	public function buildOrderBy($_orderBy) {
+	public function buildOrderBy(array $_orderBy): string {
 		if (empty($_orderBy)) {
 			return '';
 		}
@@ -70,22 +70,26 @@ class Compiler {
 				list($raw, $params) = $this->escapeRaw($where[1]);
 				$where = [$where[0], $raw];
 				$this->addParameter($params);
-			} elseif ($this->isWhere($where[1])) {
+			}
+			elseif ($this->isWhere($where[1])) {
 				list($innerClause, $params) = $where[1]->build();
 				$this->addParameter($params);
 
 				$where[1] = '(' . $innerClause . ')';
-			} elseif ($this->isSelect($where[3])) {
+			}
+			elseif ($this->isSelect($where[3])) {
 				list($subquery, $params) = $where[3]->build();
 				$this->addParameter($params);
 				if ($where[1] === null) {
 					// exists case
 					unset($where[1]);
-				} else {
+				}
+				else {
 					$where[1] = $this->escape($where[1]);
 				}
 				$where[3] = '(' . $subquery . ')';
-			} else {
+			}
+			else {
 				$wrap_with_parenthesis = is_array($where[3]);
 				$where[1] = $this->escape($where[1]);
 				$where[3] = $this->parameterize($where[3]);
@@ -114,11 +118,13 @@ class Compiler {
 				list($sub_query, $params) = $columnName->build();
 				$this->addParameter($params);
 				$columnName = "({$sub_query})";
-			} elseif (is_string($columnName) && substr(trim($columnName), -1 * strlen('.*')) === '.*') {
+			}
+			elseif (is_string($columnName) && substr(trim($columnName), -1 * strlen('.*')) === '.*') {
 				$parts = explode('.', $columnName);
 				$lastPart = array_pop($parts);
 				$columnName = $this->escape(implode('.', $parts)) . '.' . trim($lastPart);
-			} else {
+			}
+			else {
 				$columnName = $this->escape($columnName);
 			}
 
@@ -188,11 +194,13 @@ class Compiler {
 			if (is_int($column)) {
 				$column = $value;
 				$value = $this->escape(new Func('Values', $column));
-			} elseif ($this->isRaw($value)) {
+			}
+			elseif ($this->isRaw($value)) {
 				list($raw, $params) = $this->escapeRaw($value);
 				$value = $raw;
 				$this->addParameter($params);
-			} else {
+			}
+			else {
 				$value = $this->parameterize($value);
 			}
 
@@ -217,7 +225,8 @@ class Compiler {
 			if ($this->isJoinOn($join[2])) {
 				list($ons, $params) = $join[2]->build();
 				$this->addParameter($params);
-			} else {
+			}
+			else {
 				$localKey = $this->escape($join[2]);
 				$referenceKey = $this->escape($join[4]);
 				$ons = implode(' ', [$localKey, $join[3], $referenceKey]);
@@ -246,7 +255,8 @@ class Compiler {
 				list($raw, $params) = $this->escapeRaw($referenceKey);
 				$referenceKey = $raw;
 				$this->addParameter($params);
-			} else {
+			}
+			else {
 				$referenceKey = $this->escape($referenceKey);
 			}
 
@@ -261,14 +271,14 @@ class Compiler {
 	 * Doubles backticks, removes null bytes
 	 * https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
 	 *
+	 * @param string $identifier
 	 * @return string
-	 * @var string
 	 */
-	protected function escapeIdentifier($identifier) {
+	protected function escapeIdentifier(string $identifier): string {
 		return '`' . str_replace(['`', "\0"], ['``', ''], $identifier) . '`';
 	}
 
-	protected function escapeRaw($raw) {
+	protected function escapeRaw($raw): array {
 		$value = $raw->value();
 		$params = $raw->params();
 
@@ -313,9 +323,11 @@ class Compiler {
 			if ($this->isRaw($string)) {
 				list($str) = $this->escapeRaw($string);
 				return $str;
-			} elseif ($this->isFunction($string)) {
+			}
+			elseif ($this->isFunction($string)) {
 				return $this->escapeFunction($string);
-			} else {
+			}
+			else {
 				throw new QueryBuilderException('Cannot escape object of class: ' . get_class($string));
 			}
 		}
@@ -387,7 +399,8 @@ class Compiler {
 			// otherwise continue with normal table
 			if ($allowAlias && !is_int(key($table))) {
 				$table = current($table) . ' as ' . key($table);
-			} else {
+			}
+			else {
 				$table = current($table);
 			}
 		}
@@ -420,7 +433,8 @@ class Compiler {
 			list($raw, $params) = $this->escapeRaw($value);
 			$this->addParameter($params);
 			return $raw;
-		} elseif ($this->isFunction($value)) {
+		}
+		elseif ($this->isFunction($value)) {
 			return $value->name() . '(' . $this->parameterize($value->arguments()) . ')';
 		}
 

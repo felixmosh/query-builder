@@ -2,12 +2,14 @@
 
 namespace QueryBuilder\QueryBuilder;
 
+use QueryBuilder\Exception\QueryBuilderException;
+
 class Select extends Base {
 	protected $_distinct = false;
 	protected $_groupBy = [];
 	protected $_joins = [];
 
-	public function columns($cols) {
+	public function columns($cols): Select {
 		if (!is_array($cols)) {
 			return $this;
 		}
@@ -29,7 +31,7 @@ class Select extends Base {
 	 * @param $column string|array
 	 * @return $this
 	 */
-	public function column($column) {
+	public function column($column): Select {
 		if (is_array($column)) {
 			$alias = key($column);
 			$columnName = current($column);
@@ -43,12 +45,15 @@ class Select extends Base {
 		return $this;
 	}
 
-	public function distinct($flag = true) {
+	public function distinct($flag = true): Select {
 		$this->_distinct = $flag;
 		return $this;
 	}
 
-	public function count($col = '*', $alias = 'c') {
+	/**
+	 * @throws QueryBuilderException
+	 */
+	public function count($col = '*', $alias = 'c'): Select {
 		list($columnName, $alias) = $this->normalizeFunctionArgs($col, $alias);
 		$columnName = new Func('Count', $columnName === '*' ? new Raw('*') : $columnName);
 
@@ -57,19 +62,19 @@ class Select extends Base {
 		return $this;
 	}
 
-	public function groupBy($params = []) {
+	public function groupBy($params = []): Select {
 		$this->addToList($params, $this->_groupBy);
 
 		return $this;
 	}
 
-	public function join($table, $localKey, $operatorOrRefKey = null, $referenceKey = null, $type = 'left') {
+	public function join($table, $localKey, $operatorOrRefKey = null, $referenceKey = null, $type = 'left'): Select {
 		if (!$this->isAllowedOperator($operatorOrRefKey) && is_null($referenceKey)) {
 			$referenceKey = $operatorOrRefKey;
 			$operatorOrRefKey = '=';
 		}
 
-		// to make nested joins possible you can pass an closure
+		// to make nested joins possible you can pass a closure
 		if (is_object($localKey) && $localKey instanceof \Closure) {
 			// create new query object
 			$joinOn = new JoinOn($table);
@@ -86,23 +91,23 @@ class Select extends Base {
 		return $this;
 	}
 
-	public function leftJoin($table, $localKey, $operatorOrRefKey = null, $referenceKey = null) {
+	public function leftJoin($table, $localKey, $operatorOrRefKey = null, $referenceKey = null): Select {
 		return $this->join($table, $localKey, $operatorOrRefKey, $referenceKey, 'left');
 	}
 
-	public function rightJoin($table, $localKey, $operatorOrRefKey = null, $referenceKey = null) {
+	public function rightJoin($table, $localKey, $operatorOrRefKey = null, $referenceKey = null): Select {
 		return $this->join($table, $localKey, $operatorOrRefKey, $referenceKey, 'right');
 	}
 
-	public function innerJoin($table, $localKey, $operatorOrRefKey = null, $referenceKey = null) {
+	public function innerJoin($table, $localKey, $operatorOrRefKey = null, $referenceKey = null): Select {
 		return $this->join($table, $localKey, $operatorOrRefKey, $referenceKey, 'inner');
 	}
 
-	public function outerJoin($table, $localKey, $operatorOrRefKey = null, $referenceKey = null) {
+	public function outerJoin($table, $localKey, $operatorOrRefKey = null, $referenceKey = null): Select {
 		return $this->join($table, $localKey, $operatorOrRefKey, $referenceKey, 'outer');
 	}
 
-	public function build() {
+	public function build(): array {
 		$compiler = new Compiler();
 
 		if ($this->isRaw($this->_rawQuery)) {
@@ -129,7 +134,7 @@ class Select extends Base {
 		return $this->execute();
 	}
 
-	private function normalizeFunctionArgs($col, $alias) {
+	private function normalizeFunctionArgs($col, $alias): array {
 		if (is_string($col) || is_null($col)) {
 			$arr = [];
 			$arr[$alias] = $col;

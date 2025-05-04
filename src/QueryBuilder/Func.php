@@ -15,7 +15,7 @@ class Func {
 	/**
 	 * The function arguments
 	 *
-	 * @param array
+	 * @var array
 	 */
 	protected $arguments = [];
 
@@ -44,7 +44,7 @@ class Func {
 	 *
 	 * @return string
 	 */
-	public function name() {
+	public function name(): ?string {
 		return $this->name;
 	}
 
@@ -53,7 +53,7 @@ class Func {
 	 *
 	 * @return array
 	 */
-	public function arguments() {
+	public function arguments(): array {
 		return $this->arguments;
 	}
 }

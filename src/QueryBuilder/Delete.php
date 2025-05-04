@@ -3,11 +3,11 @@
 namespace QueryBuilder\QueryBuilder;
 
 class Delete extends Base {
-	public function get() {
+	public function get(): array {
 		return $this->build();
 	}
 
-	public function build() {
+	public function build(): array {
 		$compiler = new Compiler();
 
 		if ($this->isRaw($this->_rawQuery)) {

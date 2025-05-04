@@ -42,23 +42,27 @@ abstract class Base {
 		$this->_table_name = $table_name;
 	}
 
-	public function setCallback($callback) {
+	public function setCallback(callable $callback): Base {
 		$this->callback = $callback;
 		return $this;
 	}
 
-	public function where($col, $param1 = null, $param2 = null, $type = 'and') {
+	public function where($col, $param1 = null, $param2 = null, $type = 'and'): Base {
 		if ($param1 !== null && $param2 !== null && $this->isAllowedOperator($param1)) {
 			$this->addWhere($type, $col, $param1, $param2);
-		} elseif ($param1 !== null && !$this->isAllowedOperator($param1)) {
+		}
+		elseif ($param1 !== null && !$this->isAllowedOperator($param1)) {
 			$this->addWhere($type, $col, '=', $param1);
-		} elseif ($param1 === null && $param2 === null && is_array($col)) {
+		}
+		elseif ($param1 === null && $param2 === null && is_array($col)) {
 			foreach ($col as $columnName => $param2) {
 				$this->where($columnName, '=', $param2, $type);
 			}
-		} elseif ($param1 === null && $param2 === null && $this->isRaw($col)) {
+		}
+		elseif ($param1 === null && $param2 === null && $this->isRaw($col)) {
 			$this->addWhere($type, $col, null, null);
-		} elseif ($param1 === null && $param2 === null && $col instanceof \Closure) {
+		}
+		elseif ($param1 === null && $param2 === null && $col instanceof \Closure) {
 			// create new query object
 			$innerWhere = new Where();
 
@@ -71,11 +75,11 @@ abstract class Base {
 		return $this;
 	}
 
-	public function orWhere($col, $param1 = null, $param2 = null) {
+	public function orWhere($col, $param1 = null, $param2 = null): Base {
 		return $this->where($col, $param1, $param2, 'or');
 	}
 
-	public function orWhereIn($column, $values = [], $not = false) {
+	public function orWhereIn($column, $values = [], $not = false): Base {
 		if (is_array($values) && empty($values)) {
 			return $this;
 		}
@@ -83,39 +87,39 @@ abstract class Base {
 		return $this->where($column, ($not ? 'Not ' : '') . 'In', $values, 'or');
 	}
 
-	public function orWhereNotIn($column, array $values = []) {
+	public function orWhereNotIn($column, array $values = []): Base {
 		return $this->orWhereIn($column, $values, true);
 	}
 
-	public function orWhereNull($column, $not = false) {
+	public function orWhereNull($column, $not = false): Base {
 		return $this->where($column, 'Is' . ($not ? ' Not' : ''), new Raw('Null'), 'or');
 	}
 
-	public function orWhereNotNull($column) {
+	public function orWhereNotNull($column): Base {
 		return $this->orWhereNull($column, true);
 	}
 
-	public function orWhereBetween($column, $value1, $value2, $not = false) {
+	public function orWhereBetween($column, $value1, $value2, $not = false): Base {
 		return $this->where($column, ($not ? 'Not ' : '') . 'Between', new Raw('? And ?', [$value1, $value2]), 'or');
 	}
 
-	public function orWhereNotBetween($column, $value1, $value2) {
+	public function orWhereNotBetween($column, $value1, $value2): Base {
 		return $this->orWhereBetween($column, $value1, $value2, true);
 	}
 
-	public function orWhereExists($subquery, $not = false) {
+	public function orWhereExists($subquery, $not = false): Base {
 		return $this->where(null, ($not ? 'Not ' : '') . 'Exists', $subquery, 'or');
 	}
 
-	public function orWhereNotExists($subquery) {
+	public function orWhereNotExists($subquery): Base {
 		return $this->orWhereExists($subquery, true);
 	}
 
-	public function andWhere($col, $param1 = null, $param2 = null) {
+	public function andWhere($col, $param1 = null, $param2 = null): Base {
 		return $this->where($col, $param1, $param2, 'and');
 	}
 
-	public function whereIn($column, $values = [], $not = false) {
+	public function whereIn($column, $values = [], $not = false): Base {
 		if (is_array($values) && empty($values)) {
 			return $this;
 		}
@@ -123,15 +127,15 @@ abstract class Base {
 		return $this->where($column, ($not ? 'Not ' : '') . 'In', $values);
 	}
 
-	public function whereNotIn($column, array $values = []) {
+	public function whereNotIn($column, array $values = []): Base {
 		return $this->whereIn($column, $values, true);
 	}
 
-	public function whereNull($column, $not = false) {
+	public function whereNull($column, $not = false): Base {
 		return $this->where($column, 'Is' . ($not ? ' Not' : ''), new Raw('Null'));
 	}
 
-	public function whereNotNull($column) {
+	public function whereNotNull($column): Base {
 		return $this->whereNull($column, true);
 	}
 
@@ -139,24 +143,24 @@ abstract class Base {
 		return $this->where($column, ($not ? 'Not ' : '') . 'Between', new Raw('? And ?', [$value1, $value2]));
 	}
 
-	public function whereNotBetween($column, $value1, $value2) {
+	public function whereNotBetween($column, $value1, $value2): Base {
 		return $this->whereBetween($column, $value1, $value2, true);
 	}
 
-	public function whereExists($subquery, $not = false) {
+	public function whereExists($subquery, $not = false): Base {
 		return $this->where(null, ($not ? 'Not ' : '') . 'Exists', $subquery);
 	}
 
-	public function whereNotExists($subquery) {
+	public function whereNotExists($subquery): Base {
 		return $this->whereExists($subquery, true);
 	}
 
-	public function limit($limit = null, $offset = null) {
+	public function limit($limit = null, $offset = null): Base {
 		$this->_limit = [$limit, $offset];
 		return $this;
 	}
 
-	public function orderBy($params = []) {
+	public function orderBy($params = []): Base {
 		$this->addToList($params, $this->_orderBy);
 
 		return $this;
@@ -172,7 +176,7 @@ abstract class Base {
 		return null;
 	}
 
-	public function toString() {
+	public function toString(): string {
 		list($sql, $params) = $this->build();
 
 		$param_index = 0;
@@ -189,13 +193,13 @@ abstract class Base {
 		);
 	}
 
-	public function raw($string, array $params) {
+	public function raw($string, array $params): Base {
 		$this->_rawQuery = new Raw($string, $params);
 
 		return $this;
 	}
 
-	public function debug($flag = true) {
+	public function debug($flag = true): Base {
 		$this->_debug = $flag;
 
 		return $this;
@@ -203,7 +207,7 @@ abstract class Base {
 
 	abstract public function build();
 
-	protected function isRaw($raw) {
+	protected function isRaw($raw): bool {
 		return $raw instanceof Raw;
 	}
 
@@ -211,19 +215,25 @@ abstract class Base {
 		$this->_wheres[] = [$type, $columnName, $operation, $value];
 	}
 
+	/**
+	 * @param string | Func | Raw $columnName
+	 * @param string $alias
+	 * @return void
+	 */
 	protected function addColumn($columnName, $alias) {
 		$this->_columns[] = [$columnName, $alias];
 	}
 
-	protected function addToList($params, &$list) {
+	protected function addToList($params, array &$list) {
 		if (is_array($params)) {
 			$list = array_merge($list, $params);
-		} elseif (is_string($params)) {
+		}
+		elseif (is_string($params)) {
 			$list[] = $params;
 		}
 	}
 
-	protected function isAllowedOperator($operator) {
+	protected function isAllowedOperator($operator): bool {
 		return is_string($operator) && in_array(strtolower($operator), Base::$ALLOWED_OPERATIONS);
 	}
 }

@@ -14,7 +14,7 @@ class Where extends Base {
 	 */
 	protected $_wheres = [];
 
-	public function build() {
+	public function build(): array {
 		$compiler = new Compiler();
 
 		if ($this->isRaw($this->_rawQuery)) {

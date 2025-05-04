@@ -17,7 +17,7 @@ class Raw {
 	 * @param string $value
 	 * @param array $params
 	 */
-	public function __construct($value, $params = []) {
+	public function __construct(string $value, array $params = []) {
 		$this->value = $value;
 		$this->params = $params;
 	}
@@ -27,7 +27,7 @@ class Raw {
 	 *
 	 * @return string
 	 */
-	public function value() {
+	public function value(): ?string {
 		return $this->value;
 	}
 
@@ -36,7 +36,7 @@ class Raw {
 	 *
 	 * @return array
 	 */
-	public function params() {
+	public function params(): ?array {
 		return $this->params;
 	}
 

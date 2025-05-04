@@ -10,7 +10,7 @@ class JoinOn extends Base {
 	 */
 	protected $_ons = [];
 
-	public function build() {
+	public function build(): array {
 		$compiler = new Compiler();
 
 		if ($this->isRaw($this->_rawQuery)) {
@@ -29,12 +29,12 @@ class JoinOn extends Base {
 	 * Add an on condition to the join object
 	 *
 	 * @param string $localKey
-	 * @param string $operatorOrRefKey
-	 * @param string $referenceKey
+	 * @param string|null $operatorOrRefKey
+	 * @param string|null $referenceKey
 	 * @param string $type
 	 * @return static
 	 */
-	public function on($localKey, $operatorOrRefKey = null, $referenceKey = null, $type = 'and') {
+	public function on($localKey, $operatorOrRefKey = null, $referenceKey = null, $type = 'and'): JoinOn {
 		if (!$this->isAllowedOperator($operatorOrRefKey) && is_null($referenceKey)) {
 			$referenceKey = $operatorOrRefKey;
 			$operatorOrRefKey = '=';
@@ -48,12 +48,12 @@ class JoinOn extends Base {
 	 * Add an or on condition to the join object
 	 *
 	 * @param string $localKey
-	 * @param string $operatorOrRefKey
-	 * @param string $referenceKey
+	 * @param string|null $operatorOrRefKey
+	 * @param string|null $referenceKey
 	 *
 	 * @return static
 	 */
-	public function orOn($localKey, $operatorOrRefKey = null, $referenceKey = null) {
+	public function orOn($localKey, $operatorOrRefKey = null, $referenceKey = null): JoinOn {
 		$this->on($localKey, $operatorOrRefKey, $referenceKey, 'or');
 		return $this;
 	}
@@ -62,12 +62,12 @@ class JoinOn extends Base {
 	 * Add an and on condition to the join object
 	 *
 	 * @param string $localKey
-	 * @param string $operatorOrRefKey
-	 * @param string $referenceKey
+	 * @param string|null $operatorOrRefKey
+	 * @param string|null $referenceKey
 	 *
 	 * @return static
 	 */
-	public function andOn($localKey, $operatorOrRefKey = null, $referenceKey = null) {
+	public function andOn($localKey, $operatorOrRefKey = null, $referenceKey = null): JoinOn {
 		$this->on($localKey, $operatorOrRefKey, $referenceKey, 'and');
 		return $this;
 	}

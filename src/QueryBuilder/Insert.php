@@ -7,7 +7,7 @@ class Insert extends Base {
 	private $_duplicateUpdates = [];
 	private $_ignore = false;
 
-	public function columns($columns) {
+	public function columns(array $columns): Insert {
 		foreach ($columns as $column) {
 			$this->addColumn($column, null);
 		}
@@ -15,7 +15,7 @@ class Insert extends Base {
 		return $this;
 	}
 
-	public function values($values = []) {
+	public function values($values = []): Insert {
 		if (empty($values)) {
 			return $this;
 		}
@@ -33,7 +33,7 @@ class Insert extends Base {
 		return $this;
 	}
 
-	public function onDuplicateUpdate($columns) {
+	public function onDuplicateUpdate($columns): Insert {
 		if (!is_array($columns)) {
 			return $this;
 		}
@@ -43,7 +43,7 @@ class Insert extends Base {
 		return $this;
 	}
 
-	public function build() {
+	public function build(): array {
 		$compiler = new Compiler();
 
 		if ($this->isRaw($this->_rawQuery)) {
@@ -64,13 +64,13 @@ class Insert extends Base {
 		return [$sql, $params];
 	}
 
-	public function ignore($ignore = true) {
+	public function ignore($ignore = true): Insert {
 		$this->_ignore = $ignore;
 
 		return $this;
 	}
 
-	private function isAssocArray($arr) {
+	private function isAssocArray($arr): bool {
 		if (empty($arr)) {
 			return false;
 		}

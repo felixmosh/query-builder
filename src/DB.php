@@ -23,20 +23,15 @@ class DB {
 	/**
 	 * Static instance of self
 	 *
-	 * @var object
+	 * @var DB
 	 */
 	protected static $instance;
 	/**
 	 * MySQLi instance
 	 *
-	 * @var object
+	 * @var mysqli
 	 */
 	protected $mysqli;
-	/**
-	 * The SQL query to be prepared and executed
-	 *
-	 * @var object
-	 */
 
 	/**
 	 * The type of the environment
@@ -49,7 +44,7 @@ class DB {
 	private $nbQueries;
 	private $logger;
 
-	public function __construct($connection_str, $logger = null) {
+	public function __construct(string $connection_str, $logger = null) {
 		$this->isDevelopment = $_ENV['APP_ENV'] === 'development';
 		$this->nbQueries = 0;
 		$this->logger = $logger;
@@ -89,7 +84,7 @@ class DB {
 	 * @uses $db = MySqliDb::getInstance();
 	 *
 	 */
-	public static function getInstance() {
+	public static function getInstance(): DB {
 		return self::$instance;
 	}
 
@@ -98,10 +93,10 @@ class DB {
 	 * the method will add that (for optimisation purpose).
 	 *
 	 * @param $tableName string The name of the database table to work with.
-	 * @param null $postProcess
+	 * @param callable|null $postProcess
 	 * @return Select A value representing a data cell (or NULL if result is empty).
 	 */
-	public function selectSingleRow($tableName, $postProcess = null) {
+	public function selectSingleRow(string $tableName, callable $postProcess = null):Select {
 		$qb = $this->select($tableName, function ($results) use (&$postProcess) {
 			if (is_array($results) && !empty($results)) {
 				if (is_callable($postProcess) && $postProcess instanceof Closure) {
@@ -121,11 +116,11 @@ class DB {
 	 * Note: no need to add "LIMIT 1" at the end of your query because
 	 * the method will add that (for optimization purpose).
 	 *
-	 * @param $tableName string The name of the database table to work with.
-	 * @param $column string The column name to fetch
+	 * @param string $tableName The name of the database table to work with.
+	 * @param string|null $column The column name to fetch
 	 * @return Select A value representing a data cell (or NULL if result is empty).
 	 */
-	public function selectUniqueValue($tableName, $column = null) {
+	public function selectUniqueValue(string $tableName, string $column = null): Select {
 		$qb = $this->selectSingleRow($tableName, function ($result) {
 			$keys = array_keys($result);
 			return $result[$keys[0]];
@@ -137,11 +132,11 @@ class DB {
 	/**
 	 * Select query.
 	 *
-	 * @param $tableName string The name of the database table to work with.
-	 * @param null $postProcess
+	 * @param string $tableName The name of the database table to work with.
+	 * @param callable|null $postProcess
 	 * @return Select|array
 	 */
-	public function select($tableName, $postProcess = null) {
+	public function select(string $tableName, callable $postProcess = null): Select {
 		if ($this->mysqli === null) {
 			return [];
 		}
@@ -155,9 +150,9 @@ class DB {
 	/**
 	 *
 	 * @param string $tableName The name of the table.
-	 * @return Insert of inserted ids.
+	 * @return Insert|null of inserted ids.
 	 */
-	public function insert($tableName) {
+	public function insert(string $tableName): ?Insert {
 		if ($this->mysqli === null) {
 			return null;
 		}
@@ -170,9 +165,9 @@ class DB {
 	 * Update query. Be sure to first call the "where" method.
 	 *
 	 * @param $tableName string The name of the database table to work with.
-	 * @return Update of affected rows
+	 * @return Update|null of affected rows
 	 */
-	public function update($tableName) {
+	public function update(string $tableName): ?Update {
 		if ($this->mysqli === null) {
 			return null;
 		}
@@ -190,7 +185,7 @@ class DB {
 	 * @param $tableName string The name of the database table to work with.
 	 * @return Delete|null of effected rows
 	 */
-	public function delete($tableName) {
+	public function delete(string $tableName): ?Delete {
 		if ($this->mysqli === null) {
 			return null;
 		}
@@ -205,27 +200,27 @@ class DB {
 	 * @param $params array
 	 * @return Raw
 	 */
-	public function raw($str, $params = []) {
+	public function raw(string $str, array $params = []) {
 		return new Raw($str, $params);
 	}
 
-	public function func() {
+	public function func(): Func {
 		return new Func(...func_get_args());
 	}
 
-	/** Get how many time the script took from the begin of this object.
+	/** Get how long the script took from the beginning of this object.
 	 *
-	 * @param $startTime
-	 * @return number The script execution time in seconds since the
+	 * @param int $startTime
+	 * @return float The script execution time in seconds since the
 	 * creation of this object.
 	 */
-	public function getExecTime($startTime) {
+	public function getExecTime(int $startTime): float {
 		return round(($this->getMicroTime() - $startTime) * 1000) / 1000;
 	}
 
 	/** Get the number of queries executed from the begin of this object.
 	 *
-	 * @return number The number of queries executed on the database server since the
+	 * @return float The number of queries executed on the database server since the
 	 * creation of this object.
 	 */
 	public function getQueriesCount() {
@@ -249,7 +244,7 @@ class DB {
 	 * @param mixed $item Input to determine the type.
 	 * @return string The joined parameter types.
 	 */
-	protected function determineType($item) {
+	protected function determineType($item): string {
 		switch (gettype($item)) {
 			case 'NULL':
 			case 'string':
@@ -319,19 +314,19 @@ class DB {
 
 	/** Internal method to get the current time.
 	 *
-	 * @return number The current time in seconds with microseconds (in float format).
+	 * @return float The current time in seconds with microseconds (in float format).
 	 */
-	protected function getMicroTime() {
+	protected function getMicroTime():float {
 		list($msec, $sec) = explode(' ', microtime());
 		return floor($sec / 1000) + $msec;
 	}
 
 	/** Internal protected function to debug when MySQL encountered an error,
 	 * even if debug is set to Off.
-	 * @param $query
+	 * @param string $query
 	 * @throws Exception
 	 */
-	protected function debugAndDie($query) {
+	protected function debugAndDie(string $query) {
 		if ($this->isDevelopment) {
 			$last_errors = error_get_last();
 			$error = $this->mysqli->error ? $this->mysqli->error : implode('<br />', $last_errors);
@@ -352,7 +347,7 @@ class DB {
 	 * @param $type string The location called from.
 	 * @param int $totalTime
 	 */
-	protected function debug($query, $results = null, $type = 'select', $totalTime = 0) {
+	protected function debug(string $query, $results = null, string $type = 'select', int $totalTime = 0) {
 		if (!$this->isDevelopment) {
 			return;
 		}
@@ -361,7 +356,7 @@ class DB {
 		$printType = $type === 'error' ? 'Error' : 'Debug';
 
 		header('Content-Type: text/html; charset=utf-8');
-		echo "<style type='text/css'>
+		echo "<style>
 .container {
 border: solid {$color} 1px; margin: 1rem;direction:ltr;text-align:left;font-size: 16px;font-family: sans-serif
 }
@@ -442,9 +437,9 @@ margin-top: 1.5rem;
 	}
 
 	/** Write the SQL error to file
-	 * @param $query
+	 * @param string $query
 	 */
-	protected function logError($query) {
+	protected function logError(string $query) {
 		if (!$this->logger) {
 			return;
 		}

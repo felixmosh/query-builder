@@ -20,7 +20,7 @@ class Update extends Base {
 		return $this;
 	}
 
-	public function build() {
+	public function build():array {
 		$compiler = new Compiler();
 
 		if ($this->isRaw($this->_rawQuery)) {
