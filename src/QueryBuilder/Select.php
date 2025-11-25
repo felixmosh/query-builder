@@ -54,7 +54,7 @@ class Select extends Base {
 	 * @throws QueryBuilderException
 	 */
 	public function count($col = '*', $alias = 'c'): Select {
-		list($columnName, $alias) = $this->normalizeFunctionArgs($col, $alias);
+		[$columnName, $alias] = $this->normalizeFunctionArgs($col, $alias);
 		$columnName = new Func('Count', $columnName === '*' ? new Raw('*') : $columnName);
 
 		$this->addColumn($columnName, $alias);

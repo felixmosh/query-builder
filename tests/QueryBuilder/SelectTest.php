@@ -551,4 +551,25 @@ final class SelectTest extends TestCase {
 
 		$this->assertEquals(array(1), $params);
 	}
+
+	public function testBUGEmptyWrappedWhereWithFunction() {
+		$table = 'table-name';
+
+		list($sql, $params) = (new Select($table))
+			->column('id')
+			->where(function ($qb) {
+				if(false) {
+					$qb->where('id', 1);
+				}
+			}
+      )
+			->build();
+
+		$this->assertEquals(
+			"Select `id` From `$table`",
+			$sql
+		);
+
+		$this->assertEquals([], $params);
+	}
 }

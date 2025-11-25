@@ -12,7 +12,7 @@ class Compiler {
 	}
 
 	public function buildRaw($_raw_query) {
-		list($str, $params) = $this->escapeRaw($_raw_query);
+		[$str, $params] = $this->escapeRaw($_raw_query);
 
 		$this->addParameter($params);
 
@@ -42,7 +42,7 @@ class Compiler {
 			return '';
 		}
 
-		list($limit, $offset) = $_limit;
+		[$limit, $offset] = $_limit;
 		if (is_null($limit)) {
 			return '';
 		}
@@ -67,29 +67,25 @@ class Compiler {
 			$where[0] = $index === 0 ? ' Where' : ucwords($where[0]);
 
 			if ($this->isRaw($where[1])) {
-				list($raw, $params) = $this->escapeRaw($where[1]);
+				[$raw, $params] = $this->escapeRaw($where[1]);
 				$where = [$where[0], $raw];
 				$this->addParameter($params);
-			}
-			elseif ($this->isWhere($where[1])) {
-				list($innerClause, $params) = $where[1]->build();
+			} elseif ($this->isWhere($where[1])) {
+				[$innerClause, $params] = $where[1]->build();
 				$this->addParameter($params);
 
 				$where[1] = '(' . $innerClause . ')';
-			}
-			elseif ($this->isSelect($where[3])) {
-				list($subquery, $params) = $where[3]->build();
+			} elseif ($this->isSelect($where[3])) {
+				[$subquery, $params] = $where[3]->build();
 				$this->addParameter($params);
 				if ($where[1] === null) {
 					// exists case
 					unset($where[1]);
-				}
-				else {
+				} else {
 					$where[1] = $this->escape($where[1]);
 				}
 				$where[3] = '(' . $subquery . ')';
-			}
-			else {
+			} else {
 				$wrap_with_parenthesis = is_array($where[3]);
 				$where[1] = $this->escape($where[1]);
 				$where[3] = $this->parameterize($where[3]);
@@ -111,20 +107,18 @@ class Compiler {
 
 		$columns = [];
 		foreach ($_columns as $column) {
-			list($columnName, $alias) = $column;
+			[$columnName, $alias] = $column;
 
 			if ($this->isSelect($columnName)) {
 				//Subquery
-				list($sub_query, $params) = $columnName->build();
+				[$sub_query, $params] = $columnName->build();
 				$this->addParameter($params);
 				$columnName = "({$sub_query})";
-			}
-			elseif (is_string($columnName) && substr(trim($columnName), -1 * strlen('.*')) === '.*') {
+			} elseif (is_string($columnName) && substr(trim($columnName), -1 * strlen('.*')) === '.*') {
 				$parts = explode('.', $columnName);
 				$lastPart = array_pop($parts);
 				$columnName = $this->escape(implode('.', $parts)) . '.' . trim($lastPart);
-			}
-			else {
+			} else {
 				$columnName = $this->escape($columnName);
 			}
 
@@ -194,13 +188,11 @@ class Compiler {
 			if (is_int($column)) {
 				$column = $value;
 				$value = $this->escape(new Func('Values', $column));
-			}
-			elseif ($this->isRaw($value)) {
-				list($raw, $params) = $this->escapeRaw($value);
+			} elseif ($this->isRaw($value)) {
+				[$raw, $params] = $this->escapeRaw($value);
 				$value = $raw;
 				$this->addParameter($params);
-			}
-			else {
+			} else {
 				$value = $this->parameterize($value);
 			}
 
@@ -223,19 +215,18 @@ class Compiler {
 			$table = $this->escapeTable($join[1]);
 
 			if ($this->isJoinOn($join[2])) {
-				list($ons, $params) = $join[2]->build();
+				[$ons, $params] = $join[2]->build();
 				$this->addParameter($params);
-			}
-			else {
+			} else {
 				$localKey = $this->escape($join[2]);
 				$referenceKey = $this->escape($join[4]);
 				$ons = implode(' ', [$localKey, $join[3], $referenceKey]);
 			}
 
-			$joins[] = ' ' . implode(' ', [ucwords($type), 'Join', $table, 'On', $ons]);
+			$joins[] = implode(' ', [ucwords($type), 'Join', $table]) . ($ons ? ' On ' . $ons : '');
 		}
 
-		return implode(' ', $joins);
+		return ' ' . implode(' ', $joins);
 	}
 
 	public function buildJoinOns(array $_joinOns) {
@@ -249,14 +240,13 @@ class Compiler {
 		$_joinOns[0][0] = '';
 
 		foreach ($_joinOns as $on) {
-			list($type, $localKey, $operator, $referenceKey) = $on;
+			[$type, $localKey, $operator, $referenceKey] = $on;
 
 			if ($this->isRaw($referenceKey)) {
-				list($raw, $params) = $this->escapeRaw($referenceKey);
+				[$raw, $params] = $this->escapeRaw($referenceKey);
 				$referenceKey = $raw;
 				$this->addParameter($params);
-			}
-			else {
+			} else {
 				$referenceKey = $this->escape($referenceKey);
 			}
 
@@ -321,13 +311,11 @@ class Compiler {
 	protected function escape($string) {
 		if (is_object($string)) {
 			if ($this->isRaw($string)) {
-				list($str) = $this->escapeRaw($string);
+				[$str] = $this->escapeRaw($string);
 				return $str;
-			}
-			elseif ($this->isFunction($string)) {
+			} elseif ($this->isFunction($string)) {
 				return $this->escapeFunction($string);
-			}
-			else {
+			} else {
 				throw new QueryBuilderException('Cannot escape object of class: ' . get_class($string));
 			}
 		}
@@ -389,7 +377,7 @@ class Compiler {
 
 			//the table might be a subselect so check that
 			if ($table[key($table)] instanceof Select) {
-				list($subQuery, $subQueryParameters) = $table[key($table)]->build();
+				[$subQuery, $subQueryParameters] = $table[key($table)]->build();
 
 				$this->addParameter($subQueryParameters);
 
@@ -399,8 +387,7 @@ class Compiler {
 			// otherwise continue with normal table
 			if ($allowAlias && !is_int(key($table))) {
 				$table = current($table) . ' as ' . key($table);
-			}
-			else {
+			} else {
 				$table = current($table);
 			}
 		}
@@ -430,11 +417,10 @@ class Compiler {
 	 */
 	protected function param($value) {
 		if ($this->isRaw($value)) {
-			list($raw, $params) = $this->escapeRaw($value);
+			[$raw, $params] = $this->escapeRaw($value);
 			$this->addParameter($params);
 			return $raw;
-		}
-		elseif ($this->isFunction($value)) {
+		} elseif ($this->isFunction($value)) {
 			return $value->name() . '(' . $this->parameterize($value->arguments()) . ')';
 		}
 

@@ -14,6 +14,10 @@ class Where extends Base {
 	 */
 	protected $_wheres = [];
 
+	public function isEmpty(): bool {
+		return count($this->_wheres) === 0;
+	}
+
 	public function build(): array {
 		$compiler = new Compiler();
 

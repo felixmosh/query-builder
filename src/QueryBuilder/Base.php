@@ -50,26 +50,25 @@ abstract class Base {
 	public function where($col, $param1 = null, $param2 = null, $type = 'and'): Base {
 		if ($param1 !== null && $param2 !== null && $this->isAllowedOperator($param1)) {
 			$this->addWhere($type, $col, $param1, $param2);
-		}
-		elseif ($param1 !== null && !$this->isAllowedOperator($param1)) {
+		} elseif ($param1 !== null && !$this->isAllowedOperator($param1)) {
 			$this->addWhere($type, $col, '=', $param1);
-		}
-		elseif ($param1 === null && $param2 === null && is_array($col)) {
+		} elseif ($param1 === null && $param2 === null && is_array($col)) {
 			foreach ($col as $columnName => $param2) {
 				$this->where($columnName, '=', $param2, $type);
 			}
-		}
-		elseif ($param1 === null && $param2 === null && $this->isRaw($col)) {
+		} elseif ($param1 === null && $param2 === null && $this->isRaw($col)) {
 			$this->addWhere($type, $col, null, null);
-		}
-		elseif ($param1 === null && $param2 === null && $col instanceof \Closure) {
+		} elseif ($param1 === null && $param2 === null && $col instanceof \Closure) {
 			// create new query object
 			$innerWhere = new Where();
 
 			// run the closure callback on the sub query
 			call_user_func_array($col, [&$innerWhere]);
 
-			$this->_wheres[] = [$type, $innerWhere];
+			if (!$innerWhere->isEmpty()) {
+				$this->_wheres[] = [$type, $innerWhere];
+			}
+
 			return $this;
 		}
 		return $this;
@@ -167,7 +166,7 @@ abstract class Base {
 	}
 
 	public function execute() {
-		list($sql, $params) = $this->build();
+		[$sql, $params] = $this->build();
 
 		if (is_callable($this->callback) && $this->callback instanceof Closure) {
 			return call_user_func_array($this->callback, [$sql, $params, $this->_debug]);
@@ -177,7 +176,7 @@ abstract class Base {
 	}
 
 	public function toString(): string {
-		list($sql, $params) = $this->build();
+		[$sql, $params] = $this->build();
 
 		$param_index = 0;
 		return preg_replace_callback(
@@ -227,8 +226,7 @@ abstract class Base {
 	protected function addToList($params, array &$list) {
 		if (is_array($params)) {
 			$list = array_merge($list, $params);
-		}
-		elseif (is_string($params)) {
+		} elseif (is_string($params)) {
 			$list[] = $params;
 		}
 	}

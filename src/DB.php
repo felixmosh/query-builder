@@ -44,8 +44,8 @@ class DB {
 	private $nbQueries;
 	private $logger;
 
-	public function __construct(string $connection_str, $logger = null) {
-		$this->isDevelopment = $_ENV['APP_ENV'] === 'development';
+	public function __construct(string $connection_str, $logger = null, $isDevelopment = false) {
+		$this->isDevelopment = $isDevelopment;
 		$this->nbQueries = 0;
 		$this->logger = $logger;
 
@@ -96,7 +96,7 @@ class DB {
 	 * @param callable|null $postProcess
 	 * @return Select A value representing a data cell (or NULL if result is empty).
 	 */
-	public function selectSingleRow(string $tableName, callable $postProcess = null):Select {
+	public function selectSingleRow(string $tableName, callable $postProcess = null): Select {
 		$qb = $this->select($tableName, function ($results) use (&$postProcess) {
 			if (is_array($results) && !empty($results)) {
 				if (is_callable($postProcess) && $postProcess instanceof Closure) {
@@ -316,8 +316,8 @@ class DB {
 	 *
 	 * @return float The current time in seconds with microseconds (in float format).
 	 */
-	protected function getMicroTime():float {
-		list($msec, $sec) = explode(' ', microtime());
+	protected function getMicroTime(): float {
+		[$msec, $sec] = explode(' ', microtime());
 		return floor($sec / 1000) + $msec;
 	}
 
