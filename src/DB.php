@@ -10,7 +10,9 @@ use QueryBuilder\QueryBuilder\Func;
 use QueryBuilder\QueryBuilder\Insert;
 use QueryBuilder\QueryBuilder\Raw;
 use QueryBuilder\QueryBuilder\Select;
+use QueryBuilder\QueryBuilder\Transaction;
 use QueryBuilder\QueryBuilder\Update;
+use Throwable;
 
 /**
  * DB Class
@@ -206,6 +208,52 @@ class DB {
 
 	public function func(): Func {
 		return new Func(...func_get_args());
+	}
+
+	/**
+	 * Start a transaction manually.
+	 *
+	 * ```php
+	 * $transaction = $db->startTransaction();
+	 * $db->insert('users')->values([...])->execute();
+	 * $transaction->rollback(); // or $transaction->commit();
+	 * ```
+	 *
+	 * @return Transaction
+	 * @throws Exception When the transaction can't be started.
+	 */
+	public function startTransaction(): Transaction {
+		return new Transaction($this->mysqli);
+	}
+
+	/**
+	 * Run a set of queries inside a transaction.
+	 *
+	 * The transaction is committed when the callback returns and rolled back
+	 * whenever it throws.
+	 *
+	 * ```php
+	 * $db->transaction(function ($db) {
+	 *   $db->insert('users')->values([...])->execute();
+	 *   $db->update('users')->set(...)->where(...)->execute();
+	 * });
+	 * ```
+	 *
+	 * @param callable $callback Receives the db instance.
+	 * @return bool true when committed, false when rolled back.
+	 */
+	public function transaction(callable $callback): bool {
+		$transaction = $this->startTransaction();
+
+		try {
+			call_user_func($callback, $this);
+		} catch (Throwable $e) {
+			$transaction->rollback();
+
+			return false;
+		}
+
+		return $transaction->commit();
 	}
 
 	/** Get how long the script took from the beginning of this object.
