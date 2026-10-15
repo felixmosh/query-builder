@@ -21,23 +21,20 @@ final class SelectTest extends TestCase {
 
 	public function testTableNameAlias() {
 		$table = 'table-name';
-		$select = new Select(array('alias' => $table), null);
+		$select = new Select(['alias' => $table], null);
 		$this->assertEquals("Select `col` From `$table` as `alias`", $select->column('col')->toString());
 	}
 
 	public function testTableNameAsArray() {
 		$table = 'table-name';
-		$select = new Select(array($table), null);
+		$select = new Select([$table], null);
 		$this->assertEquals("Select `col` From `$table`", $select->column('col')->toString());
 	}
 
 	public function testColumnSelectionWithAlias() {
 		$table = 'table-name';
 		$select = new Select($table, null);
-		$this->assertEquals(
-			"Select `col` as `alias` From `$table`",
-			$select->column(array('alias' => 'col'))->toString()
-		);
+		$this->assertEquals("Select `col` as `alias` From `$table`", $select->column(['alias' => 'col'])->toString());
 	}
 
 	public function testColumnsSelectionWithMixed() {
@@ -46,9 +43,9 @@ final class SelectTest extends TestCase {
 		$this->assertEquals(
 			"Select `col` as `alias`, `without-alias`, `addition`, `addition-2` From `$table`",
 			$select
-				->columns(array('alias' => 'col', 'without-alias'))
+				->columns(['alias' => 'col', 'without-alias'])
 				->column('addition')
-				->columns(array('addition-2'))
+				->columns(['addition-2'])
 				->toString()
 		);
 	}
@@ -76,7 +73,7 @@ final class SelectTest extends TestCase {
 		$select = new Select($table, null);
 		$this->assertEquals(
 			"Select Count(`col`) as `alias` From `$table`",
-			$select->count(array('alias' => 'col'))->toString()
+			$select->count(['alias' => 'col'])->toString()
 		);
 	}
 
@@ -85,7 +82,17 @@ final class SelectTest extends TestCase {
 		$select = new Select($table);
 		$this->assertEquals(
 			"Select (Select * From `sub-table`) as `alias` From `$table`",
-			$select->column(array('alias' => new Select('sub-table')))->toString()
+			$select->column(['alias' => new Select('sub-table')])->toString()
+		);
+	}
+
+	public function testSubQueryAsColumns() {
+		$table = 'table-name';
+		$select = new Select($table);
+		$innerSelect = new Select('sub-table');
+		$this->assertEquals(
+			"Select (Select `column` From `sub-table`) as `alias` From `$table`",
+			$select->columns(['alias' => $innerSelect->column('column')])->toString()
 		);
 	}
 
@@ -94,10 +101,7 @@ final class SelectTest extends TestCase {
 		$column = 'column-name';
 
 		$select = new Select($table);
-		$this->assertEquals(
-			"Select `$column` From `$table`",
-			$select->column(new Raw('??', array($column)))->toString()
-		);
+		$this->assertEquals("Select `$column` From `$table`", $select->column(new Raw('??', [$column]))->toString());
 	}
 
 	public function testRawColumns() {
@@ -107,7 +111,7 @@ final class SelectTest extends TestCase {
 		$select = new Select($table);
 		$this->assertEquals(
 			"Select `$column` as `alias` From `$table`",
-			$select->column(array('alias' => new Raw('??', array($column))))->toString()
+			$select->column(['alias' => new Raw('??', [$column])])->toString()
 		);
 	}
 
@@ -118,7 +122,7 @@ final class SelectTest extends TestCase {
 		$select = new Select($table);
 		$this->assertEquals(
 			"Select Count(`column-name`) as `alias` From `$table`",
-			$select->count(array('alias' => new Raw('??', array($column))))->toString()
+			$select->count(['alias' => new Raw('??', [$column])])->toString()
 		);
 	}
 
@@ -130,7 +134,7 @@ final class SelectTest extends TestCase {
 		$this->assertEquals(
 			"Select Distinct Count(`column-name`) as `alias` From `$table`",
 			$select
-				->count(array('alias' => new Raw('??', array($column))))
+				->count(['alias' => new Raw('??', [$column])])
 				->distinct()
 				->toString()
 		);
@@ -145,7 +149,7 @@ final class SelectTest extends TestCase {
 			$select
 				->count()
 				->where('foo', 'baz')
-				->orWhere(new Raw('?? > ?', array('bar', 2)))
+				->orWhere(new Raw('?? > ?', ['bar', 2]))
 				->limit(1)
 				->toString()
 		);
@@ -155,13 +159,7 @@ final class SelectTest extends TestCase {
 		$table = 'table-name';
 
 		$select = new Select($table);
-		$this->assertEquals(
-			"Select Count(*) as `c` From `$table` Limit 1",
-			$select
-				->count()
-				->limit(1)
-				->toString()
-		);
+		$this->assertEquals("Select Count(*) as `c` From `$table` Limit 1", $select->count()->limit(1)->toString());
 	}
 
 	public function testLimitWithOffset() {
@@ -170,10 +168,7 @@ final class SelectTest extends TestCase {
 		$select = new Select($table);
 		$this->assertEquals(
 			"Select Count(*) as `c` From `$table` Limit 2, 1",
-			$select
-				->count()
-				->limit(1, 2)
-				->toString()
+			$select->count()->limit(1, 2)->toString()
 		);
 	}
 
@@ -191,7 +186,7 @@ final class SelectTest extends TestCase {
 		$this->assertEquals(
 			"Select * From `$table` Order By `bar` Desc, `foo` Asc, `baz` Asc",
 			$select
-				->orderBy(array('bar' => 'desc', 'foo'))
+				->orderBy(['bar' => 'desc', 'foo'])
 				->orderBy('baz')
 				->toString()
 		);
@@ -204,7 +199,7 @@ final class SelectTest extends TestCase {
 		$this->assertEquals(
 			"Select * From `$table` Group By `foo`, `bar`, `baz`",
 			$select
-				->groupBy(array('foo', 'bar'))
+				->groupBy(['foo', 'bar'])
 				->groupBy('baz')
 				->toString()
 		);
@@ -213,11 +208,11 @@ final class SelectTest extends TestCase {
 	public function testBasicWhere() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->where('foo', 'someValue')
-			->where(array('bla' => 1, 'boo' => '2020-09-18'))
+			->where(['bla' => 1, 'boo' => '2020-09-18'])
 			->where('bar', '>=', 'other')
-			->where(new Raw('?? <> ?', array('col1', 'value1')))
+			->where(new Raw('?? <> ?', ['col1', 'value1']))
 			->where('bar', '>', 'other2')
 			->build();
 
@@ -226,17 +221,17 @@ final class SelectTest extends TestCase {
 			$sql
 		);
 
-		$this->assertEquals(array('someValue', 1, '2020-09-18', 'other', 'value1', 'other2'), $params);
+		$this->assertEquals(['someValue', 1, '2020-09-18', 'other', 'value1', 'other2'], $params);
 	}
 
 	public function testOrWhere() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
-			->orWhere(array('bla' => 1, 'boo' => '2020-09-18'))
+		[$sql, $params] = (new Select($table))
+			->orWhere(['bla' => 1, 'boo' => '2020-09-18'])
 			->orWhere('foo', 'someValue')
 			->orWhere('bar', '>=', 'other')
-			->orWhere(new Raw('?? <> ?', array('col1', 'value1')))
+			->orWhere(new Raw('?? <> ?', ['col1', 'value1']))
 			->orWhere('bar', '>', 'other2')
 			->build();
 
@@ -245,28 +240,28 @@ final class SelectTest extends TestCase {
 			$sql
 		);
 
-		$this->assertEquals(array(1, '2020-09-18', 'someValue', 'other', 'value1', 'other2'), $params);
+		$this->assertEquals([1, '2020-09-18', 'someValue', 'other', 'value1', 'other2'], $params);
 	}
 
 	public function testMixedWhere() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
-			->where(array('bla' => 1, 'boo' => '2020-09-18'))
+		[$sql, $params] = (new Select($table))
+			->where(['bla' => 1, 'boo' => '2020-09-18'])
 			->orWhere('foo', 'someValue')
 			->build();
 
 		$this->assertEquals("Select * From `$table` Where `bla` = ? And `boo` = ? Or `foo` = ?", $sql);
 
-		$this->assertEquals(array(1, '2020-09-18', 'someValue'), $params);
+		$this->assertEquals([1, '2020-09-18', 'someValue'], $params);
 	}
 
 	public function testRawWhere() {
 		$table = 'table-name';
 
 		$select = (new Select($table))
-			->where(new Raw('?? is not Null', array('foo')))
-			->orWhere(new Raw('?? > ?', array('bar', 2)));
+			->where(new Raw('?? is not Null', ['foo']))
+			->orWhere(new Raw('?? > ?', ['bar', 2]));
 
 		$this->assertEquals("Select * From `$table` Where `foo` is not Null Or `bar` > \"2\"", $select->toString());
 	}
@@ -274,11 +269,11 @@ final class SelectTest extends TestCase {
 	public function testAndWhere() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
-			->andWhere(array('bla' => 1, 'boo' => '2020-09-18'))
+		[$sql, $params] = (new Select($table))
+			->andWhere(['bla' => 1, 'boo' => '2020-09-18'])
 			->andWhere('foo', 'someValue')
 			->andWhere('bar', '>=', 'other')
-			->andWhere(new Raw('?? <> ?', array('col1', 'value1')))
+			->andWhere(new Raw('?? <> ?', ['col1', 'value1']))
 			->andWhere('bar', '>', 'other2')
 			->build();
 
@@ -287,43 +282,40 @@ final class SelectTest extends TestCase {
 			$sql
 		);
 
-		$this->assertEquals(array(1, '2020-09-18', 'someValue', 'other', 'value1', 'other2'), $params);
+		$this->assertEquals([1, '2020-09-18', 'someValue', 'other', 'value1', 'other2'], $params);
 	}
 
 	public function testWhereIn() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->where('foo', 'bar')
 			->whereIn('empty')
-			->whereIn('baz', array('boo', 1))
+			->whereIn('baz', ['boo', 1])
 			->build();
 
 		$this->assertEquals("Select * From `$table` Where `foo` = ? And `baz` In (?, ?)", $sql);
 
-		$this->assertEquals(array('bar', 'boo', 1), $params);
+		$this->assertEquals(['bar', 'boo', 1], $params);
 	}
 
 	public function testWhereNotIn() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->whereNotIn('empty')
-			->whereNotIn('baz', array('boo', 1))
+			->whereNotIn('baz', ['boo', 1])
 			->build();
 
 		$this->assertEquals("Select * From `$table` Where `baz` Not In (?, ?)", $sql);
 
-		$this->assertEquals(array('boo', 1), $params);
+		$this->assertEquals(['boo', 1], $params);
 	}
 
 	public function testWhereNull() {
 		$table = 'table-name';
 
-		list($sql) = (new Select($table))
-			->whereNull('foo')
-			->whereNotNull('bar')
-			->build();
+		[$sql] = (new Select($table))->whereNull('foo')->whereNotNull('bar')->build();
 
 		$this->assertEquals("Select * From `$table` Where `foo` Is Null And `bar` Is Not Null", $sql);
 	}
@@ -331,98 +323,86 @@ final class SelectTest extends TestCase {
 	public function testWhereBetween() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->whereBetween('foo', '2020-01-01', '2020-09-20')
 			->whereNotBetween('bar', '2020-02-01', '2020-10-20')
 			->build();
 
 		$this->assertEquals("Select * From `$table` Where `foo` Between ? And ? And `bar` Not Between ? And ?", $sql);
 
-		$this->assertEquals(array('2020-01-01', '2020-09-20', '2020-02-01', '2020-10-20'), $params);
+		$this->assertEquals(['2020-01-01', '2020-09-20', '2020-02-01', '2020-10-20'], $params);
 	}
 
 	public function testOrWhereIn() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->where('foo', '1')
-			->orWhereIn('bar', array('2020-02-01', '2020-10-20'))
+			->orWhereIn('bar', ['2020-02-01', '2020-10-20'])
 			->build();
 
 		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` In (?, ?)', $sql);
 
-		$this->assertEquals(array('1', '2020-02-01', '2020-10-20'), $params);
+		$this->assertEquals(['1', '2020-02-01', '2020-10-20'], $params);
 	}
 
 	public function testOrWhereNotIn() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->where('foo', '1')
-			->orWhereNotIn('bar', array('2020-02-01', '2020-10-20'))
+			->orWhereNotIn('bar', ['2020-02-01', '2020-10-20'])
 			->build();
 
 		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Not In (?, ?)', $sql);
 
-		$this->assertEquals(array('1', '2020-02-01', '2020-10-20'), $params);
+		$this->assertEquals(['1', '2020-02-01', '2020-10-20'], $params);
 	}
 
 	public function testOrWhereNull() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
-			->where('foo', '1')
-			->orWhereNull('bar')
-			->build();
+		[$sql, $params] = (new Select($table))->where('foo', '1')->orWhereNull('bar')->build();
 
 		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Is Null', $sql);
 
-		$this->assertEquals(array('1'), $params);
+		$this->assertEquals(['1'], $params);
 	}
 
 	public function testOrWhereNotNull() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
-			->where('foo', '1')
-			->orWhereNotNull('bar')
-			->build();
+		[$sql, $params] = (new Select($table))->where('foo', '1')->orWhereNotNull('bar')->build();
 
 		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Is Not Null', $sql);
 
-		$this->assertEquals(array('1'), $params);
+		$this->assertEquals(['1'], $params);
 	}
 
 	public function testOrWhereBetween() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
-			->where('foo', '1')
-			->orWhereBetween('bar', 2, 3)
-			->build();
+		[$sql, $params] = (new Select($table))->where('foo', '1')->orWhereBetween('bar', 2, 3)->build();
 
 		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Between ? And ?', $sql);
 
-		$this->assertEquals(array('1', 2, 3), $params);
+		$this->assertEquals(['1', 2, 3], $params);
 	}
 
 	public function testOrWhereNotBetween() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
-			->where('foo', '1')
-			->orWhereNotBetween('bar', 2, 3)
-			->build();
+		[$sql, $params] = (new Select($table))->where('foo', '1')->orWhereNotBetween('bar', 2, 3)->build();
 
 		$this->assertEquals('Select * From `table-name` Where `foo` = ? Or `bar` Not Between ? And ?', $sql);
 
-		$this->assertEquals(array('1', 2, 3), $params);
+		$this->assertEquals(['1', 2, 3], $params);
 	}
 
 	public function testOrWhereExists() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->orWhereExists((new Select('sub-table'))->column('id')->where('id', 1))
 			->orWhereNotExists((new Select('sub-table2'))->column('id')->where('id', 2))
 			->build();
@@ -432,52 +412,50 @@ final class SelectTest extends TestCase {
 			$sql
 		);
 
-		$this->assertEquals(array(1, 2), $params);
+		$this->assertEquals([1, 2], $params);
 	}
 
 	public function testNestedWhere() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->where('foo', '1')
 			->where(function ($qb) {
-				$qb->where('bar', 2)->orWhereIn('baz', array(3, 4));
+				$qb->where('bar', 2)->orWhereIn('baz', [3, 4]);
 			})
 			->build();
 
 		$this->assertEquals("Select * From `$table` Where `foo` = ? And (`bar` = ? Or `baz` In (?, ?))", $sql);
 
-		$this->assertEquals(array('1', 2, 3, 4), $params);
+		$this->assertEquals(['1', 2, 3, 4], $params);
 	}
 
 	public function testRawQuery() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
-			->raw('Select * from ?? Where ??=?', array($table, 'col', 1))
-			->build();
+		[$sql, $params] = (new Select($table))->raw('Select * from ?? Where ??=?', [$table, 'col', 1])->build();
 
 		$this->assertEquals("Select * from `$table` Where `col`=?", $sql);
 
-		$this->assertEquals(array(1), $params);
+		$this->assertEquals([1], $params);
 	}
 
 	public function testSubQueryInWhere() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->where('foo', '=', (new Select('sub-table'))->column('id')->where('id', 1))
 			->build();
 
 		$this->assertEquals("Select * From `$table` Where `foo` = (Select `id` From `sub-table` Where `id` = ?)", $sql);
 
-		$this->assertEquals(array(1), $params);
+		$this->assertEquals([1], $params);
 	}
 
 	public function testWhereExists() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->whereExists((new Select('sub-table'))->column('id')->where('id', 1))
 			->whereNotExists((new Select('sub-table2'))->column('id')->where('id', 2))
 			->build();
@@ -487,43 +465,43 @@ final class SelectTest extends TestCase {
 			$sql
 		);
 
-		$this->assertEquals(array(1, 2), $params);
+		$this->assertEquals([1, 2], $params);
 	}
 
 	public function testSubQueryInFrom() {
-		list($sql, $params) = (new Select(array(
+		[$sql, $params] = (new Select([
 			'alias' => (new Select('innerTable'))->column('id')->where('id', 1),
-		)))->build();
+		]))->build();
 
 		$this->assertEquals('Select * From (Select `id` From `innerTable` Where `id` = ?) as `alias`', $sql);
 
-		$this->assertEquals(array(1), $params);
+		$this->assertEquals([1], $params);
 	}
 
 	public function testGet() {
 		$called = false;
-		$args = array();
+		$args = [];
 
 		$select = new Select('test');
 		$select->setCallback(function () use (&$args, &$called) {
 			$called = true;
 			$args = func_get_args();
 
-			return array('col' => 'value');
+			return ['col' => 'value'];
 		});
 
 		$resultSet = $select->debug()->get();
 
 		$this->assertTrue($called);
 
-		$this->assertEquals(array('Select * From `test`', array(), true), $args);
-		$this->assertEquals(array('col' => 'value'), $resultSet);
+		$this->assertEquals(['Select * From `test`', [], true], $args);
+		$this->assertEquals(['col' => 'value'], $resultSet);
 	}
 
 	public function testWithColumnHavingAsterisk() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select(array('t' => $table)))->column('t.* ')->build();
+		[$sql, $params] = (new Select(['t' => $table]))->column('t.* ')->build();
 
 		$this->assertEquals("Select `t`.* From `$table` as `t`", $sql);
 
@@ -533,15 +511,9 @@ final class SelectTest extends TestCase {
 	public function testSubQueryWithIn() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select(array('t' => $table)))
+		[$sql, $params] = (new Select(['t' => $table]))
 			->column('t.* ')
-			->whereIn(
-				'col',
-				(new Select("$table as inner"))
-					->column('id')
-					->where('inner.col', 1)
-					->limit(50)
-			)
+			->whereIn('col', (new Select("$table as inner"))->column('id')->where('inner.col', 1)->limit(50))
 			->build();
 
 		$this->assertEquals(
@@ -549,26 +521,22 @@ final class SelectTest extends TestCase {
 			$sql
 		);
 
-		$this->assertEquals(array(1), $params);
+		$this->assertEquals([1], $params);
 	}
 
 	public function testBUGEmptyWrappedWhereWithFunction() {
 		$table = 'table-name';
 
-		list($sql, $params) = (new Select($table))
+		[$sql, $params] = (new Select($table))
 			->column('id')
 			->where(function ($qb) {
-				if(false) {
+				if (false) {
 					$qb->where('id', 1);
 				}
-			}
-      )
+			})
 			->build();
 
-		$this->assertEquals(
-			"Select `id` From `$table`",
-			$sql
-		);
+		$this->assertEquals("Select `id` From `$table`", $sql);
 
 		$this->assertEquals([], $params);
 	}
