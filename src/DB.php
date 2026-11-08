@@ -410,11 +410,14 @@ class DB {
 				'totalTime' => $totalTime,
 			];
 			if ($results !== null) {
-				$context['results'] = is_object($results) && method_exists($results, 'toArray')
-					? $results->toArray()
-					: (is_object($results) ? get_object_vars($results) : $results);
+				$context['results'] =
+					is_object($results) && method_exists($results, 'toArray')
+						? $results->toArray()
+						: (is_object($results)
+							? get_object_vars($results)
+							: $results);
 			}
-			$this->logger->{$level}("[{$printType}] {$query}", $context);
+			$this->logger->{$level}($query, $context);
 			return;
 		}
 
@@ -518,14 +521,13 @@ margin-top: 1.5rem;
 		}
 
 		$err = [
-			'dateTime' => date('H:i:s d-m-Y  (T)'),
 			'query' => $query,
 			'error' => ['type' => 'SQLError', 'msg' => $this->mysqli->error],
 			'script' => ['name' => $stack_trace[$i - 1]['file'], 'line' => $stack_trace[$i - 1]['line']],
 			'ip' => $_SERVER['REMOTE_ADDR'],
 		];
 
-		$this->logger->error(json_encode($err));
+		$this->logger->error('DB.ERROR', $err);
 	}
 
 	private function handleResults($queryBuilder, $postProcess = null) {
