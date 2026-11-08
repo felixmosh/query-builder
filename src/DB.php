@@ -403,6 +403,21 @@ class DB {
 		$color = $type === 'error' ? 'red' : 'orange';
 		$printType = $type === 'error' ? 'Error' : 'Debug';
 
+		if ($this->logger) {
+			$level = $type === 'error' ? 'error' : 'debug';
+			$context = [
+				'type' => $type,
+				'totalTime' => $totalTime,
+			];
+			if ($results !== null) {
+				$context['results'] = is_object($results) && method_exists($results, 'toArray')
+					? $results->toArray()
+					: (is_object($results) ? get_object_vars($results) : $results);
+			}
+			$this->logger->{$level}("[{$printType}] {$query}", $context);
+			return;
+		}
+
 		header('Content-Type: text/html; charset=utf-8');
 		echo "<style>
 .container {
